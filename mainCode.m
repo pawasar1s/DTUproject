@@ -1,29 +1,26 @@
-clear all; clc; close all; 
+clear; clc; close all; 
 addpath(genpath('matpower6.0')) 
 addpath(genpath('IEEECases')); addpath(genpath('readMatPower'));
 addpath(genpath('C:\Users\plus0002\OneDrive\PhD\DTUproject\cvx')) 
-mpc = IEEE_9BUS; 
+% checkcode mainCode -cyc % -> Applies McCabe Complexity (should keep below 10)
 %% AC OPF
-ACOPFVoltVec = [];
-ACOPFLossVec = [];
-ACOPFCurVec = [];
-changePd = 5; % which bus to change? 
-loadCoef = [1 1.5 2 5];
-for l = 1% : length(loadCoef)
-    mpc = IEEE_9BUS; 
+mpc = IEEE_9BUS; 
+%loadScen = [1 1.5 2 5]; 
+loadScen = 1; 
+ACOPF_V = complex(zeros(size(mpc.bus,1),length(loadScen))); % Bus Voltage Vector 
+ACOPF_I2R = complex(zeros(size(mpc.bus,1)-1,length(loadScen))); % Line Loss Vector
+ACOPF_I = complex(zeros(size(mpc.bus,1)-1,length(loadScen))); % Line Current
+changePd = 3; % No of Bus with demand change
+for l = 1 : length(loadScen) 
     mpopt = mpoption('model','AC', 'pf.tol', 1e-4,'opf.ac.solver','DEFAULT'); 
-    mpc.bus(changePd,3) = mpc.bus(changePd,3)*loadCoef(l); 
-    %mpc.bus(changePd,4) = mpc.bus(changePd,4)*loadCoef(l);
-    ACOPF = runopf(mpc,mpopt); 
-    ACOPF_V = ACOPF.bus(:,8); % excluding slack bus (saving results for comparison) 
-    ACOPFLosses = get_losses(ACOPF); 
-    ACOPFVoltVec = [ACOPFVoltVec ACOPF_V]; 
-    ACOPFLossVec = [ACOPFLossVec ACOPFLosses]; 
-    [ACOPF_I] = linesCurrent(mpc, ACOPF_V);
-    ACOPFCurVec = [ACOPFCurVec, ACOPF_I];
+    mpc.bus(changePd,3) = mpc.bus(changePd,3)*loadScen(l); 
+    ACOPF = runopf(mpc,mpopt); % 
+    ACOPF_V(:,l) = ACOPF.bus(:,8); 
+    ACOPF_I2R(:,l) = get_losses(ACOPF); 
+    ACOPF_I(:,l) = linesCurrent(mpc, ACOPF_V); 
 end
 %% Defining Network Topology
-[genMatrix,nGen, genLoc, PMin, PMax, QMin, QMax, nBuses, busLoc, Vmin, Vmax, Pd, Qd] = readGensMPC(mpc);
+[genMatrix,nGen, genLoc, PMin, PMax, QMin, QMax, nBuses, busLoc, ~, ~, Pd, Qd] = readGensMPC(mpc);
 [linesMatFrom, linesMatTo, nLines, linesFrom, linesTo, R, X, Z, Ybus, Yline, lineMaxFlow, OriginBusLoc] = readLinesMPC(mpc);
 % adds bus names if given in MatPower file 
 if exist('mpc.bus_name','var') == 1 
@@ -82,7 +79,7 @@ cvx_begin
        subject to 
        % Solar PV constraints
        0 <= Pc <= Pav; %Eq.9
-       (Qc).^2 <= (Sinj).^2-(Pav-Pc).^2 %Eq.10
+       (Qc).^2 <= (Sinj).^2-(Pav-Pc).^2; %Eq.10
        abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
        % Voltage
        real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
@@ -130,7 +127,7 @@ if exist('mpc.bus_name','var') == 1
     %writetable(LineLossTable, 'LineLossTable', 'WriteRowNames',true);
     %
     ParTable = table(Pav, round(Pc,4), Pav-round(Pc,4), round(Pd,4), round(Qc,4), round(Qd,4), round(Sinj,4), 'rownames', BusName(2:end)); % compare Guggilam and ACOPF
-    ParTable.Properties.VariableNames = {'Pav', 'Pc', 'Pinj', 'Pd', 'Qc','Qd','Sinj'}
+    ParTable.Properties.VariableNames = {'Pav', 'Pc', 'Pinj', 'Pd', 'Qc','Qd','Sinj'};
     %writetable(ParTable, 'Par_Guggilam', 'WriteRowNames',true);
 else 
     VoltageTable = table(voltageVec) % compare Guggilam and ACOPF
@@ -142,7 +139,7 @@ else
     %writetable(LineLossTable, 'LineLossTable', 'WriteRowNames',true);
     %
     ParTable = table(Pav, round(Pc,4), Pav-round(Pc,4), round(Pd,4), round(Qc,4), round(Qd,4),round(Sinj,4)); % compare Guggilam and ACOPF
-    ParTable.Properties.VariableNames = {'Pav', 'Pc', 'Pinj', 'Pd', 'Qc','Qd','Sinj'}
+    ParTable.Properties.VariableNames = {'Pav', 'Pc', 'Pinj', 'Pd', 'Qc','Qd','Sinj'};
     %writetable(ParTable, 'Par_Guggilam', 'WriteRowNames',false);
 end
 %% plot voltages 
