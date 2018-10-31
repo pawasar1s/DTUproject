@@ -3,10 +3,9 @@ addpath(genpath('matpower6.0'))
 addpath(genpath('IEEECases')); addpath(genpath('readMatPower'));
 addpath(genpath('C:\Users\plus0002\OneDrive\PhD\DTUproject\cvx')) 
 % checkcode mainCode -cyc % -> Applies McCabe Complexity (should keep below 10)
-%% AC OPF
 mpc = IEEE_9BUS; 
-%loadScen = [1 1.5 2 5]; 
-loadScen = 1; 
+%% AC OPF
+loadScen = 1;% 1.5 2.0 5.0]; 
 ACOPF_V = complex(zeros(size(mpc.bus,1),length(loadScen))); % Bus Voltage Vector 
 ACOPF_I2R = complex(zeros(size(mpc.bus,1)-1,length(loadScen))); % Line Loss Vector
 ACOPF_I = complex(zeros(size(mpc.bus,1)-1,length(loadScen))); % Line Current
