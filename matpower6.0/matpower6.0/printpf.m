@@ -214,7 +214,7 @@ if OUT_SYS_SUM && (success || OUT_FORCE)
     fprintf(fd, '\n================================================================================');
     fprintf(fd, '\n|     System Summary                                                           |');
     fprintf(fd, '\n================================================================================');
-    fprintf(fd, '\n\nHow many?                How much?              P (MW)            Q (MVAr)');
+    fprintf(fd, '\n\nHow many?                How much?              P (kW)            Q (kVAr)');
     fprintf(fd, '\n---------------------    -------------------  -------------  -----------------');
     fprintf(fd, '\nBuses         %6d     Total Gen Capacity   %7.1f       %7.1f to %.1f', nb, sum(gen(allg, PMAX)), sum(gen(allg, QMIN)), sum(gen(allg, QMAX)));
     fprintf(fd, '\nGenerators     %5d     On-line Capacity     %7.1f       %7.1f to %.1f', length(allg), sum(gen(ong, PMAX)), sum(gen(ong, QMIN)), sum(gen(ong, QMAX)));
@@ -246,10 +246,10 @@ if OUT_SYS_SUM && (success || OUT_FORCE)
     if isOPF
         [minv, mini] = min(bus(:, LAM_P));
         [maxv, maxi] = max(bus(:, LAM_P));
-        fprintf(fd, '\nLambda P        %8.2f $/MWh @ bus %-4d   %8.2f $/MWh @ bus %-4d', minv, bus(mini, BUS_I), maxv, bus(maxi, BUS_I));
+        fprintf(fd, '\nLambda P        %8.2f $/kWh @ bus %-4d   %8.2f $/kWh @ bus %-4d', minv, bus(mini, BUS_I), maxv, bus(maxi, BUS_I));
         [minv, mini] = min(bus(:, LAM_Q));
         [maxv, maxi] = max(bus(:, LAM_Q));
-        fprintf(fd, '\nLambda Q        %8.2f $/MWh @ bus %-4d   %8.2f $/MWh @ bus %-4d', minv, bus(mini, BUS_I), maxv, bus(maxi, BUS_I));
+        fprintf(fd, '\nLambda Q        %8.2f $/kWh @ bus %-4d   %8.2f $/kWh @ bus %-4d', minv, bus(mini, BUS_I), maxv, bus(maxi, BUS_I));
     end
     fprintf(fd, '\n');
 end
@@ -288,7 +288,7 @@ if OUT_AREA_SUM && (success || OUT_FORCE)
         length(nzld), length(onld), length(nzsh), nl, length(xfmr), length(ties));
     fprintf(fd, '\n');
     fprintf(fd, '\nArea      Total Gen Capacity           On-line Gen Capacity         Generation');
-    fprintf(fd, '\n Num     MW           MVAr            MW           MVAr             MW    MVAr');
+    fprintf(fd, '\n Num     kW           kVAr            kW           kVAr             kW    kVAr');
     fprintf(fd, '\n----   ------  ------------------   ------  ------------------    ------  ------');
     for i=1:length(s_areas)
         a = s_areas(i);
@@ -306,7 +306,7 @@ if OUT_AREA_SUM && (success || OUT_FORCE)
             sum(gen(ong, PG)), sum(gen(ong, QG)) );
     fprintf(fd, '\n');
     fprintf(fd, '\nArea    Disp Load Cap       Disp Load         Fixed Load        Total Load');
-    fprintf(fd, '\n Num      MW     MVAr       MW     MVAr       MW     MVAr       MW     MVAr');
+    fprintf(fd, '\n Num      kW     kVAr       kW     kVAr       kW     kVAr       kW     kVAr');
     fprintf(fd, '\n----    ------  ------    ------  ------    ------  ------    ------  ------');
     Qlim = (gen(:, QMIN) == 0) .* gen(:, QMAX) + (gen(:, QMAX) == 0) .* gen(:, QMIN);
     for i=1:length(s_areas)
@@ -331,7 +331,7 @@ if OUT_AREA_SUM && (success || OUT_FORCE)
             -sum(gen(onld, QG)) + sum(Qdf(nzld)) );
     fprintf(fd, '\n');
     fprintf(fd, '\nArea      Shunt Inj        Branch      Series Losses      Net Export');
-    fprintf(fd, '\n Num      MW     MVAr     Charging      MW     MVAr       MW     MVAr');
+    fprintf(fd, '\n Num      kW     kVAr     Charging      kW     kVAr       kW     kVAr');
     fprintf(fd, '\n----    ------  ------    --------    ------  ------    ------  ------');
     for i=1:length(s_areas)
         a = s_areas(i);
@@ -366,8 +366,8 @@ if OUT_GEN && (success || OUT_FORCE)
     fprintf(fd, '\n|     Generator Data                                                           |');
     fprintf(fd, '\n================================================================================');
     fprintf(fd, '\n Gen   Bus   Status     Pg        Qg   ');
-    if isOPF, fprintf(fd, '   Lambda ($/MVA-hr)'); end
-    fprintf(fd, '\n  #     #              (MW)     (MVAr) ');
+    if isOPF, fprintf(fd, '   Lambda ($/kVA-hr)'); end
+    fprintf(fd, '\n  #     #              (kW)     (kVAr) ');
     if isOPF, fprintf(fd, '     P         Q    '); end
     fprintf(fd, '\n----  -----  ------  --------  --------');
     if isOPF, fprintf(fd, '  --------  --------'); end
@@ -389,8 +389,8 @@ if OUT_GEN && (success || OUT_FORCE)
         fprintf(fd, '\n|     Dispatchable Load Data                                                   |');
         fprintf(fd, '\n================================================================================');
         fprintf(fd, '\n Gen   Bus   Status     Pd        Qd   ');
-        if isOPF, fprintf(fd, '   Lambda ($/MVA-hr)'); end
-        fprintf(fd, '\n  #     #              (MW)     (MVAr) ');
+        if isOPF, fprintf(fd, '   Lambda ($/kVA-hr)'); end
+        fprintf(fd, '\n  #     #              (kW)     (kVAr) ');
         if isOPF, fprintf(fd, '     P         Q    '); end
         fprintf(fd, '\n----  -----  ------  --------  --------');
         if isOPF, fprintf(fd, '  --------  --------'); end
@@ -416,8 +416,8 @@ if OUT_BUS && (success || OUT_FORCE)
     fprintf(fd, '\n|     Bus Data                                                                 |');
     fprintf(fd, '\n================================================================================');
     fprintf(fd, '\n Bus      Voltage          Generation             Load        ');
-    if isOPF, fprintf(fd, '  Lambda($/MVA-hr)'); end
-    fprintf(fd, '\n  #   Mag(pu) Ang(deg)   P (MW)   Q (MVAr)   P (MW)   Q (MVAr)');
+    if isOPF, fprintf(fd, '  Lambda($/kVA-hr)'); end
+    fprintf(fd, '\n  #   Mag(pu) Ang(deg)   P (kW)   Q (kVAr)   P (kW)   Q (kVAr)');
     if isOPF, fprintf(fd, '     P        Q   '); end
     fprintf(fd, '\n----- ------- --------  --------  --------  --------  --------');
     if isOPF, fprintf(fd, '  -------  -------'); end
@@ -468,18 +468,19 @@ end
 
 %% branch data
 if OUT_BRANCH && (success || OUT_FORCE)
-    fprintf(fd, '\n================================================================================');
-    fprintf(fd, '\n|     Branch Data                                                              |');
-    fprintf(fd, '\n================================================================================');
-    fprintf(fd, '\nBrnch   From   To    From Bus Injection   To Bus Injection     Loss (I^2 * Z)  ');
-    fprintf(fd, '\n  #     Bus    Bus    P (MW)   Q (MVAr)   P (MW)   Q (MVAr)   P (MW)   Q (MVAr)');
-    fprintf(fd, '\n-----  -----  -----  --------  --------  --------  --------  --------  --------');
-    fprintf(fd, '\n%4d%7d%7d%10.2f%10.2f%10.2f%10.2f%10.3f%10.2f', ...
+    fprintf(fd, '\n===================================================================================================================');
+    fprintf(fd, '\n|     Branch Data                                                                                                 |');
+    fprintf(fd, '\n===================================================================================================================');
+    fprintf(fd, '\nBrnch   From   To    From Bus Injection   To Bus Injection     Loss (I^2 * Z)                Impedance             ');
+    fprintf(fd, '\n  #     Bus    Bus    P (kW)   Q (kVAr)   P (kW)   Q (kVAr)   P (kW)   Q (kVAr)       R(p.u.)          X(p.u.)     ');
+    fprintf(fd, '\n-----  -----  -----  --------  --------  --------  --------  --------  --------  ----------------  ----------------');
+    fprintf(fd, '\n%4d%7d%7d%10.2f%10.2f%10.2f%10.2f%10.3f%10.2f%15f%15.2f', ...
             [   (1:nl)', branch(:, [F_BUS, T_BUS]), ...
                 branch(:, [PF, QF]), branch(:, [PT, QT]), ...
-                real(loss), imag(loss) ...
+                real(loss), imag(loss), ...
+                branch(:,[BR_R, BR_X])...
             ]');
-    fprintf(fd, '\n                                                             --------  --------');
+    fprintf(fd, '\n                                                              --------  --------');
     fprintf(fd, '\n                                                    Total:%10.3f%10.2f', ...
             sum(real(loss)), sum(imag(loss)));
     fprintf(fd, '\n');

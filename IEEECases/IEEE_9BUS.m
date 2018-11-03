@@ -1,4 +1,4 @@
-function mpc = IEEE_9BUS_Radial_modified
+function mpc = IEEE_9BUS
 %CASE9    Power flow data for 9 bus, 3 generator case.
 %   Please see CASEFORMAT for details on the case file format.
 %
