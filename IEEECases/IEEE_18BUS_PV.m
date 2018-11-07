@@ -20,46 +20,55 @@ mpc.baseMVA = mbase; % [kVA]
 %% bus data
 Pload = 2;
 Qload = 1.4;
+Vmin = 0.95;
+Vmax = 1.1;
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
+% Vm - reference magnitude 
+% Va - reference angle. 
 mpc.bus = [
 1	3	0       0       0	0	1	1	0	0.240   1	1.02	1.02; % grid
-2	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-3	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
-4	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-5	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-6	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
-7	2	Pload   Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-8	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-9	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
-10	2	Pload   Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-11	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-12	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
-13	2	Pload   Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-14	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-15	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
-16	2	Pload   Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-17	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
-18	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
-19	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
+2	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+3	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
+4	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+5	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+6	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
+7	2	Pload   Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+8	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+9	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
+10	2	Pload   Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+11	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+12	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
+13	2	Pload   Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+14	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+15	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
+16	2	Pload   Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+17	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
+18	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
+19	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
 ];
 %     10 BASE_KV     baseKV, base voltage (kV)
+% 
 %% generator data
 PVeff = 0.77;
+PF = 0.85;
+Qlim = tan(acos(PF));
+% Pg Qg are initial serach values  
 %	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	PmaxDC[kW]	PminDC[kW]	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
+% Vg - initial voltage magnitude
 mpc.gen = [
-	1	0	0   500	-500	1	1	mbase     1000        -1000       0	0	0	0	0	0	0	0	0	0	0;
-    2	0	0	5	-5      1	1	mbase     5.52*PVeff	5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    4	0	0	5	-5      1	1	mbase     5.70*PVeff	5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    5	0	0	5	-5      1	1	mbase     9.00*PVeff	9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    7	0	0	5	-5      1	1	mbase     9.00*PVeff	9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    8	0	0	5	-5      1	1	mbase     9.00*PVeff	9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    10	0	0	5	-5      1	1	mbase     5.70*PVeff	5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    11	0	0	5	-5      1	1	mbase     9.00*PVeff	9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    13	0	0	5	-5      1	1	mbase     5.70*PVeff	5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    14	0	0	5   -5      1	1	mbase    5.52*PVeff	5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    16	0	0	5	-5      1	1	mbase     5.52*PVeff	5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    17	0	0	5	-5      1	1	mbase     5.70*PVeff	5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0;
-    19	0	0	5	-5      1	1	mbase    9.00*PVeff	9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0;
+	1	0	0   1000*PVeff*Qlim	-1000*PVeff*Qlim	  1	1	mbase     1000        -1000 0	0	0	0	0	0	0	0	0	0	0;
+    2	0	0	5.52*PVeff*Qlim	-5.52*PVeff*Qlim      1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    4	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    5	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    7	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    8	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    10	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    11	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    13	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    14	0	0	5.52*PVeff*Qlim -5.52*PVeff*Qlim      1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    16	0	0	5.52*PVeff*Qlim	-5.52*PVeff*Qlim      1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    17	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    19	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase    9.00*PVeff	    0	0	0	0	0	0	0	0	0	0	0	0;
 ];
 
 %% branch data
@@ -74,8 +83,16 @@ x_Dline = x_dropLine/1000*dropLineL; % [p.u.]
 r_Pline = r_poleLine/1000*polePoleL; % [p.u.]
 x_Pline = x_poleLine/1000*polePoleL; % [p.u.]
 %	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
+%[F_BUS,   T_BUS,BR_R,BR_X,BR_B,RATE_A  RATE_B, RATE_C, TAP,    SHIFT, BR_STATUS, PF,     QF,   PT, QT, MU_SF, MU_ST, ANGMIN, ANGMAX, MU_ANGMIN, MU_ANGMAX] = idx_brch;
+% === RATE_A - branch flow limits, 0 represents unconstrained lined 
+% === TAP 9 - transformer of nominal turns ratio, if non-zero (taps at \from"
+% bus, impedance at \to" bus, i.e. if r = x = b = 0, tap = Vf/Vt ;
+% tap = 0 used to indicate transmission line rather than transformer,
+% i.e. mathematically equivalent to transformer with tap = 1)
+% opf.flow_lim option determines if branch limits are in S,P or I. 
+% === SHIFT - trasnformer phase shift angle (degrees), positive -> delay
 mpc.branch = [
-1	3	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
+1	3	0       0.0001      0	0	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
 3	2	r_Dline	x_Dline	    0	0	0	0	0	0	1	-360	360;
 3	4	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 3	6	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
@@ -120,6 +137,7 @@ mpc.bus_name = {
 %% generator cost data
 %	1	startup	shutdown	n	x1	y1	...	xn	yn
 %	2	startup	shutdown	n	c(n-1)	...	c0
+%[PW_LINEAR, POLYNOMIAL, MODEL, STARTUP, SHUTDOWN, NCOST, COST] = idx_cost;
 mpc.gencost = [
     2	0      0	3	0    0.3	 0;
     2	0      0	3	0    0	 0;
@@ -134,7 +152,13 @@ mpc.gencost = [
     2	0      0	3	0    0	 0;
     2	0      0	3	0    0	 0;
     2	0      0	3	0    0	 0;
-]; % 80$/MWh
+]; 
+%MODEL       = 1;    %% cost model, 1 = piecewise linear, 2 = polynomial
+%STARTUP     = 2;    %% startup cost in US dollars
+%SHUTDOWN    = 3;    %% shutdown cost in US dollars
+%NCOST       = 4;    %% number breakpoints in piecewise linear cost function,
+%                    %% or number of coefficients in polynomial cost function
+%COST         = 5;    %% parameters defining total cost function begin in this col
 %% convert branch impedances from Ohms to p.u.
 mpc.Vbase = mpc.bus(1,10) * 1000; % from kV to 240 Volts
 mpc.Sbase = mpc.baseMVA * 1000; % from kVA to VA 
