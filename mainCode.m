@@ -3,9 +3,10 @@ addpath(genpath('matpower6.0'))
 addpath(genpath('IEEECases')); addpath(genpath('readMatPower'));
 addpath(genpath('C:\Users\plus0002\OneDrive\PhD\DTUproject\cvx')) 
 % checkcode mainCode -cyc % -> Applies McCabe Complexity (should keep below 10)
-mpc = IEEE_9BUS; 
+%  figure; imagesc (abs (inv (YBus)))
+mpc = IEEE_18BUS; 
 %% AC OPF
-loadScen = [1 1.5 2.0 2.5]; 
+loadScen = [0.5]; 
 changePd = 6; % No of Bus with demand change
 ACOPF_V = complex(zeros(size(mpc.bus,1),length(loadScen))); % Bus Voltage Vector 
 ACOPF_I2R = complex(zeros(size(mpc.bus,1)-1,length(loadScen))); % Line Loss Vector
@@ -20,12 +21,16 @@ for l = 1 : length(loadScen)
 end
 %% Defining Network Topology
 [genMatrix,nGen, genLoc, PMin, PMax, QMin, QMax, nBuses, busLoc, ~, ~, Pd, Qd] = readGensMPC(mpc);
-[linesMatFrom, linesMatTo, nLines, linesFrom, linesTo, R, X, Z, Ybus, Yline, lineMaxFlow, OriginBusLoc] = readLinesMPC(mpc);
+[linesMatFrom, linesMatTo, nLines, linesFrom, linesTo, R, X, Z, Y, Yline, lineMaxFlow, OriginBusLoc] = readLinesMPC(mpc);
 % adds bus names if given in MatPower file 
 if exist('mpc.bus_name','var') == 1 
     BusName = mpc.bus_name; 
 end 
-[ZBus, YBus, ZBusSlack, YBusSlack, Ymn] = readYBusMPC(linesFrom, linesTo, Z, Ybus, nLines, nBuses); 
+%[ZBus, YBus, YBusSlack, Ymn] = readYBusMPC(linesFrom, linesTo, Z, Y, nLines, nBuses); 
+YBusSlack = makeYbus(mpc);
+YBus = YBusSlack(2:end, 2:end);
+ZBus = inv(YBus);
+Ymn = 2*[real(conj(YBusSlack)) zeros(nBuses,nBuses); zeros(nBuses,nBuses) real(conj(YBusSlack))];
 %% Active and Reactive Power Costs 
 a = 5; b = 10; c = 2; d = 4;
 % Active Power Quadratic costs is defined as follows
@@ -37,7 +42,7 @@ D = d * ones(nBuses-1,1);
 PF = 0.8; % selected power factor
 V0 = 1; % slack bus voltage
 Vnom = ones(nBuses-1,1)*1; % nominal voltage vector [p.u.]
-Vmin = ones(nBuses-1,1)*0.95; % min voltage [p.u.]
+Vmin = ones(nBuses-1,1)*0.90; % min voltage [p.u.]
 Vmax = ones(nBuses-1,1)*1.05; % max voltage [p.u.]
 Pd = Pd(2:end); % w/o slack bus
 Qd = Qd(2:end); % w/o slack bus 
@@ -45,10 +50,12 @@ Nnode = size(YBus,1);
 %% Optimisation problem - No Solar
 Sinj = zeros(nBuses-1,1); % inverter capacity vector 
 Pav = zeros(nBuses-1,1); % solar PV vector
+%Pav(mpc.gen(2:end,1)-1) = mpc.gen(2:end,9); % solar PV output (minGen from MatPower [kW]
+%Sinj(mpc.gen(2:end,1)-1) = mpc.gen(2:end,9); % solar PV output (minGen from MatPower [kW]
 voltageVec = complex(zeros(size(mpc.bus,1),length(loadScen))); % empty vector for voltage scenarios
 lossVec = complex(zeros(size(mpc.bus,1)-1,length(loadScen))); % lone loss vector
 changePd = changePd; % between 2-10
-loadCoef = [1 1.5 2 2.5];
+loadCoef = [1];
 for k = 1 : length(loadCoef)
     Pd(changePd) = Pd(changePd)*loadCoef(k);
     Qd(changePd) = Qd(changePd)*loadCoef(k)/2;
@@ -60,8 +67,9 @@ cvx_begin
     variable Qc(nBuses-1,1); % Reative power absorbed/produced by inverter [MW] 
     % OBJECTIVE FUNCTION ====================================
     Obj1_Vec = [real(V0); real(V); imag(V0); imag(V)]; 
-    Obj1 = 0.1 * quad_form(Obj1_Vec, Ymn); %Eq.1
-    Obj2 = 100 * quad_form(Pc, A) + quad_form(Qc, C) + B' * Pc + D' * abs(Qc); %Eq.2
+    Obj1 = 0.5 * quad_form(Obj1_Vec, Ymn); %Eq.1
+    Obj2 = 0.5 * quad_form(Pc, A) + quad_form(Qc, C) + B' * Pc + D' * abs(Qc); %Eq.2
+    %Obj3 = 0;
     Obj3_Vec = eye(Nnode) - (1/Nnode).*ones(Nnode,1)*ones(1,Nnode);
     Obj3 = norm(Obj3_Vec*diag(V),2) 
     minimize(Obj1 + Obj2 + Obj3) % Eq.4
@@ -130,21 +138,21 @@ plot(1:nBuses,ACOPF_V,'--')
 %plot([3 6 9 12 15 18],ACOPFVoltVec([3 6 9 12 15 18]),'r*') % poles
 xlabel('bus') 
 ylabel('Voltage [p.u.]') 
-xlim([1 nBuses]); ylim([0.93 1.05]) 
+xlim([1 nBuses]); ylim([0.90 1.05]) 
 xticks(0:1:nBuses); 
-%legend('P=1','P=1.5','P=2','P=2.5','AC=1','AC=1.5','AC=2','AC=2.5')
+%legend('P1','P1.5','P2','P2.5','AC1','AC1.5','AC2','AC2.5')
 set(gcf,'color','w'); 
 grid on; grid minor
 % plot line losses
 figure(12)
 plot(1:nBuses-1,lossVec)
+legend('P=1','P=1.5')%,'P=2','P=2.5','AC=1','AC=1.5','AC=2','AC=2.5')
+set(gcf,'color','w'); 
 hold on
 plot(1:nBuses-1,ACOPF_I2R,'--')
 xlabel('Lines') 
-ylabel('Line losses [MW]') 
+ylabel('Line losses [kW]') 
 xticks(1:1:nBuses); 
-%legend('P=1','P=1.5','P=2','P=2.5','AC=1','AC=1.5','AC=2','AC=2.5')
-set(gcf,'color','w'); 
 grid on; grid minor
 % plot line current 
 %% plot P&Q

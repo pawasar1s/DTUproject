@@ -26,7 +26,7 @@ Vmax = 1.1;
 % Vm - reference magnitude 
 % Va - reference angle. 
 mpc.bus = [
-1	3	0       0       0	0	1	1	0	0.240   1	1.02	1.02; % grid
+1	3	0       0       0	0	1	1	0	0.240   1	1.0	1.0; % grid
 2	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
 3	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
 4	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;

@@ -22,7 +22,7 @@ Pload = 4.9;
 Qload = 3;
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 mpc.bus = [
-1	3	0       0       0	0	1	1	0	0.240   1	1.02	1.02; % grid
+1	3	0       0       0	0	1	1	0	0.240   1	1.0	1.0; % grid
 2	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
 3	1	0       0       0	0	1	1	0	0.240	1	1.1	0.9;
 4	2	Pload	Qload	0	0	1	1	0	0.240	1	1.1	0.9;
