@@ -1,25 +1,31 @@
-function [genMatrix, nGen, genLoc, PMin, PMax, QMin, QMax, nBuses, busLoc, Vmin, Vmax, Pd, Qd] = readGensMPC(mpc);
+function [nGen, Vnom, Vmin, Vmax, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
 % Buses
-OriginBusLoc = mpc.bus(:,1); % number of buses 
-busLoc = 1 : length(OriginBusLoc);
-nBuses = size(mpc.bus,1); % number of buses 
-%busLoc = mpc.bus(:,1); % number of buses 
-Vmin = mpc.bus(:,13);
-Vmax = mpc.bus(:,12);
+V0 = testCase.bus(1,8);
+Vnom = testCase.bus(2:end,8);
+Vmin = testCase.bus(2:end,13);
+Vmax = testCase.bus(2:end,12);
 % Generators
-nGen = size(mpc.gen,1); % number of generators
-%genLoc = mpc.gen(:,1); % location of generators
-OriginGenLoc = mpc.gen(:,1); % location of generators
-[tf, genLoc]=ismember(OriginGenLoc,OriginBusLoc,'rows');
-baseMVA = mpc.baseMVA; % power rating
-PMin = mpc.gen(:,10)/baseMVA; % convert from kW to MW 
-PMax = mpc.gen(:,9)/baseMVA;
-QMin = mpc.gen(:,4)/baseMVA;
-QMax = mpc.gen(:,5)/baseMVA;
+nGen = size(testCase.gen,1); % number of generators
+baseMVA = testCase.baseMVA; % power rating
 % Demand 
-Pd = mpc.bus(:,3)/baseMVA; % active power % convert from kW to MW 
-Qd = mpc.bus(:,4)/baseMVA; % reactive power
-% Generators incidence matrix
-genMatrix = sparse(1:nGen, genLoc, 1 , nGen, nBuses); % gen incidence matrix  [plants x nodes]
-
+Pd = testCase.bus(2:end,3)/baseMVA; % active power w/o SLACK BUS
+Qd = testCase.bus(2:end,4)/baseMVA; % reactive power w/o SLACK BUS
+%% Defining Pav and Sinj
+% inverterSize = 1.1; % inverter size as % of max P
+% nPV = size(testCase.gen,1)-1; % No of PV systems
+Pav = zeros(nBuses-1,1); % solar PV vector
+Sinj = zeros(nBuses-1,1); % inverter capacity vector 
+% if nPV ~= 0
+%     Pav(testCase.gen(2:end,1)-1) = testCase.gen(2:end,9); % solar PV output (minGen from MatPower [kW]
+%     Sinj(testCase.gen(2:end,1)-1) = testCase.gen(2:end,9)*inverterSize; % solar PV output (minGen from MatPower [kW]
+% end
+%% Active and Reactive Power Costs 
+a = 5; b = 10; c = 2; d = 4;
+% Active Power Quadratic costs is defined as follows
+A = 0.5 * eye(nBuses-1) * a; % x*A*x' 
+B = b * ones(nBuses-1,1);
+C = 0.5 * eye(nBuses-1) * c;
+D = d * ones(nBuses-1,1);
+%%% Define parameters 
+PF = 0.8; % selected power factor
 end

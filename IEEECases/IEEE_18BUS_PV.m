@@ -1,4 +1,4 @@
-function mpc = IEEE_18BUS_Radial_HHs_PV
+function mpc = IEEE_18BUS_PV
 %CASE9    Power flow data for 9 bus, 3 generator case.
 %   Please see CASEFORMAT for details on the case file format.
 %
@@ -50,25 +50,23 @@ mpc.bus = [
 % 
 %% generator data
 PVeff = 0.77;
-PF = 0.85;
-Qlim = tan(acos(PF));
 % Pg Qg are initial serach values  
 %	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	PmaxDC[kW]	PminDC[kW]	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
 % Vg - initial voltage magnitude
 mpc.gen = [
-	1	0	0   1000*PVeff*Qlim	-1000*PVeff*Qlim	  1	1	mbase     1000        -1000 0	0	0	0	0	0	0	0	0	0	0;
-    2	0	0	5.52*PVeff*Qlim	-5.52*PVeff*Qlim      1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    4	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    5	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    7	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    8	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    10	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    11	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    13	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    14	0	0	5.52*PVeff*Qlim -5.52*PVeff*Qlim      1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    16	0	0	5.52*PVeff*Qlim	-5.52*PVeff*Qlim      1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    17	0	0	5.70*PVeff*Qlim	-5.70*PVeff*Qlim      1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
-    19	0	0	9.00*PVeff*Qlim	-9.00*PVeff*Qlim      1	1	mbase    9.00*PVeff	    0	0	0	0	0	0	0	0	0	0	0	0;
+	1	0	0   1000	-1000	  1	1	mbase     1000        -1000 0	0	0	0	0	0	0	0	0	0	0;
+    2	0	0	5.52*PVeff	-5.52*PVeff     1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    4	0	0	5.70*PVeff	-5.70*PVeff     1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    5	0	0	9.00*PVeff	-9.00*PVeff     1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    7	0	0	9.00*PVeff	-9.00*PVeff     1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    8	0	0	9.00*PVeff	-9.00*PVeff     1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    10	0	0	5.70*PVeff	-5.70*PVeff     1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    11	0	0	9.00*PVeff	-9.00*PVeff     1	1	mbase     9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    13	0	0	5.70*PVeff	-5.70*PVeff     1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    14	0	0	5.52*PVeff  -5.52*PVeff     1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    16	0	0	5.52*PVeff	-5.52*PVeff     1	1	mbase     5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    17	0	0	5.70*PVeff	-5.70*PVeff     1	1	mbase     5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0	0;
+    19	0	0	9.00*PVeff	-9.00*PVeff     1	1	mbase    9.00*PVeff	    0	0	0	0	0	0	0	0	0	0	0	0;
 ];
 
 %% branch data
@@ -92,23 +90,23 @@ x_Pline = x_poleLine/1000*polePoleL; % [p.u.]
 % opf.flow_lim option determines if branch limits are in S,P or I. 
 % === SHIFT - trasnformer phase shift angle (degrees), positive -> delay
 mpc.branch = [
-1	3	0       0.0001      0	0	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
-3	2	r_Dline	x_Dline	    0	0	0	0	0	0	1	-360	360;
+1	3	r_Pline	x_Pline     0	0	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
+2	3	r_Dline	x_Dline	    0	0	0	0	0	0	1	-360	360;
 3	4	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 3	6	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-6	5	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+5	6	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 6	7	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 6	9	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-9	8	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+8	9	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 9	10	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 9	12	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-12	11	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+11	12	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 12	13	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 12	15	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-15	14	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+14	15	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 15	16	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 15	18	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-18	17	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+17	18	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 18	19	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
 ];
 %%
