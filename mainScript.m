@@ -1,33 +1,79 @@
 clear; clc; close all; 
-addpath(genpath('matpower7.0b1')); addpath(genpath('cvx')); 
-addpath(genpath('IEEECases')); addpath(genpath('readMatPower'));
+addpath(genpath('matpower7.0b1')); addpath(genpath('cvx')); addpath(genpath('SC_Cases'));
+addpath(genpath('IEEECases')); addpath(genpath('readMatPower')); addpath(genpath('Results'));
 %addpath(genpath('C:\Users\plus0002\OneDrive\PhD\DTUproject\cvx')) 
 rmpath('cvx/lib/narginchk_') % remove this function to avoid a potential name conflict
-% checkcode mainCode -cyc %% -> Applies McCabe Complexity (should keep below 10)
+%checkcode Guggilam -cyc %% -> Applies McCabe Complexity (should keep below 10)
 %% Settings
 % No of time intervals
 multiPer = 1; % 1 = multiperiod model, 2 = discretised model
 per = 26; % for discretised model, which period to test? 26 = 1pm (30min intervals)
 % Matpower settings
-matpower = 1; % Matpower 1 - run Matpower for comparison 
+matpower = 0; % Matpower 1 - run Matpower for comparison 
 % Plotting 
-plotting = 1; % YES = 1, NO = 0
+plotting = 0; % YES = 1, NO = 0
 % Select test case
-%testCase = IEEE_18BUS; % select case
 testCase = IEEE_18BUS_PV; % select case
-%% Load Data
-[solarHH, loadHH, loadTotal, timestamp, T] = dataInput(testCase);
-%% MATPOWER power flow
-if matpower == 1 
-    ACOPFsolver = 1; % 1 = exact ACOPF, 2 = backward/forward sweep with I summation
-    PF = 0.8;
-    [ACOPF_struct, ACOPF_V, ACOPF_I2R, ACOPF_f] = ACOPF(testCase, T, solarHH, loadHH, ACOPFsolver, multiPer, per, PF);
+% ==============
+% to change the scenario with no control, change Vmax to 1.2 in
+% IEEE_18BUS_PV.m  
+% ===============
+% testCase = matpower_LV_semiurban; % works fine 
+% testCase = matpower_rural; % works fine 
+%% network viz
+%network2 = networkViz(testCase);
+%% Results at varios penetration levels
+solarScen = 1; % if various solar peentration scenarios are on 
+solarCap = [1 1.5 2]; % capacity increase
+%% 
+T = 48;
+store_Gug_V18 = complex(zeros(T, length(solarCap))); % Voltage vector 
+store_Gug_V9 = complex(zeros(T, length(solarCap))); % Voltage vector 
+store_Gug_V3 = complex(zeros(T, length(solarCap))); % Voltage vector 
+store_Gug_Pc = complex(zeros(T, length(solarCap))); % PV curtailment
+store_Gug_Qc = complex(zeros(T, length(solarCap))); % Q from PV
+store_Gug_Qg = complex(zeros(T, length(solarCap))); % Q from grid
+store_Gug_Pg = complex(zeros(T, length(solarCap))); % Q from grid
+store_Gug_Penet = zeros(length(solarCap), 1); % 
+for i = 1 : length(solarCap)
+    testCase = IEEE_18BUS_PV; 
+    %% Load Data
+    [solar, loadHH, loadTotal, timestamp, T, penetration, nBuses] = dataInput(testCase, solarCap(i));
+    %% MATPOWER power flow
+    if matpower == 1
+        ACOPFsolver = 1; % 1 = exact ACOPF, 2 = backward/forward sweep with I summation
+        PF = 0.8;
+        [ACOPF_struct, ACOPF_V, ACOPF_I2R, ACOPF_f, ACOPF_Qg] = ACOPF(testCase, T, solar, loadHH, ACOPFsolver, multiPer, per, PF);
+    end
+    %% Guggilam
+    [V, Pc, Qc, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, solar, loadHH, multiPer, per);
+    %[V, Pc, Qc, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_PcTot, Gug_QcTot] = VoltVar(testCase, T, solar, loadHH, multiPer, per);    
+    % 
+    store_Gug_V18(:,i) = Gug_V(:,18); % Voltage vector Bus 18
+    store_Gug_V9(:,i) = Gug_V(:,9); % Voltage vector Bus 18
+    store_Gug_V3(:,i) = Gug_V(:,3); % Voltage vector Bus 18
+    store_Gug_Pc(:,i) = Gug_PcTot; % P from PV (curtailment)
+    store_Gug_Qc(:,i) = Gug_QcTot; % Q from PV (regulation)
+    store_Gug_Qg(:,i) = Gug_QgTot; % Q from grid (total)
+    store_Gug_Pg(:,i) = Gug_PgTot; % P from PV (curtailment)
+    store_Gug_Penet(i) = penetration; % penetration level
 end
-%% Guggilam 
-[V, Pc, Qc, Gug_V, Gug_I2R] = Guggilam(testCase, T, solarHH, loadHH, multiPer, per);
+    %% Save Results
+% if exist('testCase.bus_name','var') == 0
+%     %BusName = testCase.bus_name; 
+%     VoltageTable_noCont = table( store_Gug_V18, store_Gug_V9, store_Gug_V3) % compare Guggilam and ACOPF
+%     %VoltageTable.Properties.VariableNames = {'V_Guggilam' };
+%     %writetable(VoltageTable_noCont, 'res_VoltageTable_noCont.mat');
+%     save('VoltageTable_noCont.mat', 'VoltageTable_noCont')
+%         
+%     PcQcTAble_noCont = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg) % compare Guggilam and ACOPF
+%    % LineLossTable.Properties.VariableNames = {'Line_losses_Gug' };
+%     %writetable(PcQcTAble_noCont, 'res_PcQcTable_noCont.mat');
+%     save('PcQcTAble_noCont.mat', 'PcQcTAble_noCont')
+% end
 %% GRAPHS
 if plotting == 1
-    nBuses = size(testCase.bus,1); % number of buses
+    %nBuses = size(testCase.bus,1); % number of buses
     nLines = size(testCase.branch,1); % number of lines
     if multiPer == 0
         % ============  FEEDER VOLTAGE PROFILE
@@ -36,10 +82,10 @@ if plotting == 1
         plot(1:nBuses,abs(Gug_V),'r--')
         hold on
         plot(1:nBuses,abs(ACOPF_V),'b--')
-        plot([3 6 9 12 15 18],Gug_V([3 6 9 12 15 18]),'k*')  % poles
-        plot([5 7 8 11 19],Gug_V([5 7 8 11 19]),'ko') % big solar
-        plot([3 6 9 12 15 18],ACOPF_V([3 6 9 12 15 18]),'k*') % poles
-        plot([5 7 8 11 19],ACOPF_V([5 7 8 11 19]),'ko') % big solar
+        %plot([3 6 9 12 15 18],Gug_V([3 6 9 12 15 18]),'k*')  % poles
+        %plot([5 7 8 11 19],Gug_V([5 7 8 11 19]),'ko') % big solar
+        %plot([3 6 9 12 15 18],ACOPF_V([3 6 9 12 15 18]),'k*') % poles
+        %plot([5 7 8 11 19],ACOPF_V([5 7 8 11 19]),'ko') % big solar
         hold off
         xlabel('bus')
         ylabel('Voltage [p.u.]')
@@ -49,7 +95,7 @@ if plotting == 1
         title('Voltage Profile')
         set(gcf,'color','w');
         grid on
-        grid minor
+        %grid minor
         % ============  LINE LOSSES
         f5 = figure(5);
         movegui(f5,'southwest');
@@ -71,10 +117,10 @@ if plotting == 1
         %xticks(1:1:size(ACOPF.branch,1));
         set(gcf,'color','w');
         grid on
-        grid minor
+        %grid minor
         % ============  ACTIVE/REACTIVE POWER PURCHASE
     elseif multiPer == 1
-        UB = ones(size(solarHH,1),1)*1.05;
+        UB = ones(size(solar,1),1)*1.05;
         timE = 0:minutes(30):hours(23.5);
         tt = 1:48;
         % ============  LOAD PROFILES
@@ -90,6 +136,7 @@ if plotting == 1
         % xlabel('Periods')
         % ylabel('Household Loads [kW]')
         % Voltage profile for 3 poles over day
+        
         % figure(2) ============  ANIMATION
         % pol0 = animatedline('Marker','*','Color','r');
         % pol1 = animatedline('Color','r');
@@ -109,7 +156,9 @@ if plotting == 1
         %     title('Voltage profile over day')
         %     pause(.15)
         % end
-        f3 = figure(3) % ============  VOLTAGE OVER DAY FOR 3 BUSES
+        
+        % ============  VOLTAGE OVER DAY FOR 3 BUSES
+        f3 = figure(3) 
         movegui(f3,'southwest');
         plot(timE,ACOPF_V(:,3),'r')
         hold on
@@ -129,6 +178,7 @@ if plotting == 1
         legend({'ACOPF: Pole 3','ACOPF: Pole 9','ACOPF: Pole 18','Gug: Pole 3','Gug: Pole 9','Gug: Pole 18'},'Location','northwest')
         set(gcf,'color','w');
         grid on
+        
         % ============  FEEDER VOLTAGE PROFILE
         f4 = figure(4);
         movegui(f4,'northwest');
@@ -157,6 +207,7 @@ if plotting == 1
         set(gcf,'color','w');
         grid on
         grid minor
+        
         % ============  LINE LOSSES
         f5 = figure(5);
         movegui(f5,'southeast');
@@ -178,22 +229,63 @@ if plotting == 1
         set(gcf,'color','w');
         grid on
         grid minor
-        % ============  ACTIVE/REACTIVE POWER PURCHASE
-        f6 = figure(6);
-        %movegui(f6,'northeast');
+        
+        % ============  REACTIVE POWER PURCHASE
+        f7 = figure(7);
+        movegui(f7,'northeast');
         %plot(timE, ACOPF_PgQg)
         %hold on
-        plot(timE, loadTotal, 'g')
-        hold on
-        plot(timE, abs(sum(ACOPF_I2R,2)), 'k','LineWidth',2)
+        %plot(timE, loadTotal, 'g')
+        %hold on
+        %plot(timE, abs(sum(ACOPF_I2R,2)), 'k','LineWidth',2)
+        plot(timE, abs(Gug_QgTot), 'r','LineWidth',2)
         % yyaxis right
         % plot(t, ACOPF_f,'*')
         hold off
         xlabel('Time [Hours]')
         ylabel('Grid Purchases [kW]')
         legend('Active Grid Power (P)','Reactive Grid Power (Q)','Total Load','Line Losses','Location','SouthWest')
-        title('ACOPF: Grid Purchases and Cost')
+        title('Reactive power from the grid')
         grid on
         set(gcf,'color','w');
+        %% ============  Volt/Var
+        f8 = figure(8);
+        movegui(f8,'northeast');        
+        scatter(Gug_V(:,18),abs(Gug_QcTot))
+        xlim([0.93 1.1])
+        %ylim([-0.01 0.01])
+        xlabel('Voltage Magnitude [p.u.]')
+        ylabel('Reactive Power [kVAR]')
+        grid on
+        set(gcf,'color','w');    
+        % ============  VOlt/Watt
+        f9 = figure(9);
+        movegui(f9,'southeast');        
+        scatter(Gug_V(:,18),abs(Gug_PcTot))
+        xlim([0.93 1.1])
+        %ylim([-0.01 0.01])
+        xlabel('Voltage Magnitude [p.u.]')
+        ylabel('Reactive Power [kVAR]')
+        grid on
+        set(gcf,'color','w');   
     end
+% if solarScen == 1
+%     f9 = figure(9) 
+%         movegui(f9,'southwest');
+%         %plot(timE,store_Gug_V(abs(Gug_V(:,3)),'r--')
+%         %hold on
+%         %plot(timE,abs(Gug_V(:,9)),'b--')
+%         plot(timE,abs(store_Gug_V),'k--')
+%         %plot(timE,ones(T,1)*1.05,'Marker','*','Color','r')
+%         %hold off
+%         %plot(t,ones(size(solarHH,1),1)*0.95,'Marker','*','Color','r')
+%         xlabel('Time (Hour)')
+%         ylabel('Voltage [p.u.]')
+%         ylim([0.94 1.08])
+%         %xticks(0:2:size(loadHH,1));
+%         title('Voltage profile over day')
+%         legend({'ACOPF: Pole 3','ACOPF: Pole 9','ACOPF: Pole 18','Gug: Pole 3','Gug: Pole 9','Gug: Pole 18'},'Location','northwest')
+%         set(gcf,'color','w');
+%         grid on    
+% end
 end

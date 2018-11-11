@@ -1,9 +1,10 @@
-function [nGen, Vnom, Vmin, Vmax, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
+function [nGen, Vnom, Vmin, Vmax, deltaV, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
 % Buses
 V0 = testCase.bus(1,8);
 Vnom = testCase.bus(2:end,8);
 Vmin = testCase.bus(2:end,13);
 Vmax = testCase.bus(2:end,12);
+deltaV = Vmin-Vmax;
 % Generators
 nGen = size(testCase.gen,1); % number of generators
 baseMVA = testCase.baseMVA; % power rating

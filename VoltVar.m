@@ -1,7 +1,7 @@
-function [V, Pc, Qc, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, solar, loadHH, multiPer, per)
+function [V, Pc, Qc, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_PcTot, Gug_QcTot] = VoltVar(testCase, T, solar, loadHH, multiPer, per)
 % inputs
 [~, ZBus, Ymn, nBuses, ~, nB] = readLinesMPC(testCase);
-[~, Vnom, Vmin, Vmax, ~, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
+[~, Vnom, Vmin, Vmax, deltaV, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
 %changePd = changePd; % between 2-10
 inverterSize = 1.1;
 if multiPer == 0
@@ -39,13 +39,13 @@ if multiPer == 0
         0 <= Pc <= Pav; %Eq.9
         (Qc).^2 <= (Sinj).^2-(Pav-Pc).^2; %Eq.10
         abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
+        Qc == (V-Vmax)/deltaV;
         % Power balance eq.
         real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
         imag(V) == imag(ZBus)*(Pav - Pc - Pd) - real(ZBus)*(Qc - Qd); %Eq.5
         % Voltage magnitude limits
         Vmin <= Vnom + real(ZBus)*(Pav - Pc - Pd)+ imag(ZBus)*(Qc - Qd) <= Vmax; % Eq.7 & 8
         cvx_end
-        % SAVE RESULTS ===========================================
         % Voltage vector
         Gug_V = [V0; V];
         % Line Losses
@@ -93,14 +93,14 @@ elseif multiPer == 1
         % Solar PV constraints
         0 <= Pc <= Pav; %Eq.9
         (Qc).^2 <= (Sinj).^2-(Pav-Pc).^2; %Eq.10
-        abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
+        %abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
+        Qc == (1./deltaV).*(abs(V)-Vmax);
         % Power balance eq.
         real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
         imag(V) == imag(ZBus)*(Pav - Pc - Pd) - real(ZBus)*(Qc - Qd); %Eq.5
         % Voltage magnitude limits
         Vmin <= Vnom + real(ZBus)*(Pav - Pc - Pd)+ imag(ZBus)*(Qc - Qd) <= Vmax; % Eq.7 & 8
         cvx_end
-        % SAVE RESULTS ===========================================
         % Voltage vector
         Vfull = [V0; V];
         Gug_V(t,:) = Vfull;
