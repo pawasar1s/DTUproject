@@ -18,4 +18,5 @@ end
 loadP = max(sum(loadHH,1));
 solarP = sum(testCase.gen(2:end,9));
 penetration = solarP*solarCap/loadP;
+nBuses = size(testCase.bus,1);
 end

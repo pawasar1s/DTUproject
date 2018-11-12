@@ -1,4 +1,4 @@
-function [V, Pc, Qc, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, solar, loadHH, multiPer, per)
+function [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, solar, loadHH, multiPer, per)
 % inputs
 [~, ZBus, Ymn, nBuses, ~, nB] = readLinesMPC(testCase);
 [~, Vnom, Vmin, Vmax, ~, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
@@ -50,8 +50,16 @@ if multiPer == 0
         Gug_V = [V0; V];
         % Line Losses
         [Gug_I2R, Vdrop] = linesLoss(mpc, Gug_V);
+        Gug_I2R = Gug_I2R'; Gug_V = Gug_V';
         % Reactive Power 
         Gug_QgTot = sum(Qc-Qd);
+        Gug_PgTot = sum(Pd-Pav+Pc);
+        % Reactive Power 
+        Gug_PcTot = sum(Pc);
+        Gug_QcTot = sum(Qc);
+        % Line losses
+        Gug_I2RTot = sum(Gug_I2R);
+        % Financial losses 
     end
     toc;
 elseif multiPer == 1
@@ -61,10 +69,11 @@ elseif multiPer == 1
     nPV = size(mpc.gen,1)-1; % No of PV systems
     idxPV = find(mpc.bus(:,2) == 2); % idx for buses with PV systems
     Gug_V = complex(zeros(T,size(mpc.bus,1))); % Bus Voltage Vector
-    Gug_I2R = complex(zeros(T,size(mpc.bus,1)-1)); % Line Loss Vector
     Gug_QgTot = complex(zeros(T,1)); % Line Loss Vector
     Gug_PcTot = complex(zeros(T,1)); % Line Loss Vector
     Gug_QcTot = complex(zeros(T,1)); % Line Loss Vector
+    Gug_PgTot = complex(zeros(T,1)); % Line Loss Vector
+    Gug_I2RTot = complex(zeros(T,1)); % Line Loss Vector
     for t = 1 : T
         % START ====================================================
         % update solar data
@@ -105,14 +114,15 @@ elseif multiPer == 1
         Vfull = [V0; V];
         Gug_V(t,:) = Vfull;
         % Line Losses
-        [lineLoss, Vdrop] = linesLoss(mpc, Vfull);
-        Gug_I2R(t,:) = lineLoss;
+        [Gug_I2R, Vdrop] = linesLoss(mpc, Vfull);
         % Reactive Power 
         Gug_QgTot(t,:) = sum(Qc-Qd);
         Gug_PgTot(t,:) = sum(Pd-Pav+Pc);
         % Reactive Power 
         Gug_PcTot(t,:) = sum(Pc);
         Gug_QcTot(t,:) = sum(Qc);
+        % Line losses
+        Gug_I2RTot(t,:) = sum(Gug_I2R);
     end
     toc;
 end

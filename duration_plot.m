@@ -1,4 +1,4 @@
-function ret = duration_plot(y_data, varargin)
+function ret = duration_plot(y_data, f32, varargin)
 % Plots up a duration curve for the columns of y_data
 %
 % Inputs (Mandatory):
@@ -80,7 +80,7 @@ if ~isempty(p.Results.MonthPartition) && ((size(y_data,2) > 1) || (~isempty(p.Re
 end
 %% Basic Curve
 % Ranked Data (Duration Curve)
-h = figure;
+h = f32;
 set(h,'DefaultAxesColorOrder',p.Results.TraceColours, 'DefaultAxesLineStyleOrder','-|-.|--|:');
 tmp_x = 0 : 100/(length(y_data)-1) : 100;
 if p.Results.ProbabilityOnYAxis
