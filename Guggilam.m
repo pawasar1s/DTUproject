@@ -74,13 +74,24 @@ elseif multiPer == 1
     Gug_QcTot = complex(zeros(T,1)); % Line Loss Vector
     Gug_PgTot = complex(zeros(T,1)); % Line Loss Vector
     Gug_I2RTot = complex(zeros(T,1)); % Line Loss Vector
+    %
+    Gug_QcInd = complex(zeros(T,size(mpc.bus,1)-1));  % Line Loss Vector
+    Gug_QminInd = complex(zeros(T,size(mpc.bus,1)-1));  % Line Loss Vector
+    %
+    Gug_check_Sinj = complex(zeros(T,size(mpc.bus,1)-1)); % check Sinj
+    Gug_actual_Sinj = complex(zeros(T,size(mpc.bus,1)-1)); 
+    Gug_check_PF = complex(zeros(T,size(mpc.bus,1)-1)); 
     for t = 1 : T
         % START ====================================================
         % update solar data
         if nPV ~= 0
             Pav(idxPV-1) = mpc.gen(2:end,9)*solar(t)/baseMVA; % Pmax
             Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(t)*inverterSize/baseMVA; % Pmin
+            %Qmin = sqrt(Sinj.^2-Pav.^2)+0.1*Pav;
+            Qmin = tan(acos(PF))*(Pav)+0.1*Pav;
         end
+        Gug_QminInd(t,:) = -Qmin; % minus to show maax absorbtion level
+        Gug_actual_Sinj(t,:) = Sinj; 
         % update load data
         Pd(idxPV-1) = loadHH(t,idxPV-1)'/baseMVA; % Pg
         Qd(idxPV-1) = loadHH(t,idxPV-1)'*0.6/baseMVA; % Qg, 0.6 assumed of Pd (we don't have Qd data)
@@ -101,7 +112,7 @@ elseif multiPer == 1
         subject to
         % Solar PV constraints
         0 <= Pc <= Pav; %Eq.9
-        (Qc).^2 <= (Sinj).^2-(Pav-Pc).^2; %Eq.10
+        (Qc).^2 <= (Sinj).^2-(Pav-Pc).^2+0.1*Pav; %Eq.10
         abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
         % Power balance eq.
         real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
@@ -121,9 +132,44 @@ elseif multiPer == 1
         % Reactive Power 
         Gug_PcTot(t,:) = sum(Pc);
         Gug_QcTot(t,:) = sum(Qc);
+        Gug_QcInd(t,:) = Qc;
         % Line losses
         Gug_I2RTot(t,:) = sum(Gug_I2R);
+        % validate results
+        Gug_check_Sinj(t,:) = sqrt(Qc.^2+(Pav-Pc).^2);
+        Gug_check_PF(t,:) = (Pav-Pc)./sqrt((Pav-Pc).^2+Qc.^2);
     end
     toc;
+    %% plot Qmax vs Qc 
+    close all;
+    figure(101)
+    plot(Gug_QminInd(:,18),'*');hold on; plot(Gug_QcInd(:,18),'o')
+    ylabel('Reactive Power [kVAR]')
+    legend({'Qmin','Observed Qc'})
+    %
+    figure(102)
+    plot(1:19, Gug_V(26,:))%;hold on; plot(Gug_QcInd(26,:),'o')
+    ylabel('Reactive Power [kVAR]')
+    legend({'Voltage'})   
+    %
+    figure(103)
+    plot(Gug_check_Sinj(:,18),'*');hold on; plot(Gug_actual_Sinj(:,18),'o')
+    ylabel('Apparent power S_inj [kVA]')
+    legend({'Calculated Apparent Power', 'Actual Apparent Power'})  
+    %
+    figure(104)
+    plot(1:48, Gug_PcTot)%;hold on; plot(Gug_QcInd(26,:),'o')
+    ylabel('Active Power [kW]')
+    legend({'Active Power Curtailment'})     
+    %
+    figure(105)
+    plot(Gug_V(:,18), Gug_QcInd(:,18), '*')%;hold on; plot(Gug_QcInd(26,:),'o')
+    ylabel('Active Power [kW]')
+    legend({'Reactive power vs voltage'})    
+    %
+    figure(106)
+    plot(Gug_check_PF(:,18), '*')%;hold on; plot(1:48, 0.8*ones(1,48),'o')
+    ylabel('Power Factor')
+    legend({'Power Factor'})  
 end
 end

@@ -7,11 +7,11 @@ rmpath('cvx/lib/narginchk_') % remove this function to avoid a potential name co
 %10) 
 %% Settings
 % No of time intervals
-multiPer = 1; % 1 = multiperiod model, 2 = discretised model
+multiPer = 1; % 1 = multiperiod model, 0 = discretised model
 per = 26; % for discretised model, which period to test? 26 = 1pm (30min intervals)
 % Matpower settings
 matpower = 0; % Matpower 1 - run Matpower for comparison 
-Guggi = 1; % Guggi = 1: Run Guggilam model, Guggi = 2: Run Volt/Var control model 
+Guggi = 2; % Guggi = 1: Run Guggilam model, Guggi = 2: Run Volt/Var control model 
 % Plotting 
 plotting = 0; % YES = 1, NO = 0
 %% Results at varios penetration levels
@@ -44,6 +44,7 @@ elseif Guggi == 2
     store_VAR_I2R = complex(zeros(T, length(solarCap))); % line losses
     store_VAR_Penet = zeros(length(solarCap), 1); %        
 end
+%%
 for i = 1 : length(solarCap)
     % Select test case
     % testCase = IEEE_18BUS_PV; % select case
@@ -78,33 +79,33 @@ for i = 1 : length(solarCap)
         store_Gug_I2R(:,i) = Gug_I2RTot; % line losses
         store_Gug_Penet(i) = penetration; % penetration level
         % Save output
-        if Vmax(2) > 1.05
+        if Vmax(2) > 1.05 
             %BusName = testCase.bus_name;
             VoltageTable_noCont = table( store_Gug_V18, store_Gug_V9, store_Gug_V3) %
-            save('VoltageTable_noCont.mat', 'VoltageTable_noCont')
+            %save('VoltageTable_noCont.mat', 'VoltageTable_noCont')
             
             PcQcTAble_noCont = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg) %
-            save('PcQcTAble_noCont.mat', 'PcQcTAble_noCont')
+            %save('PcQcTAble_noCont.mat', 'PcQcTAble_noCont')
             
             OtherRes_noCont = table(store_Gug_I2R) %
-            save('OtherRes_noCont.mat', 'OtherRes_noCont')
+            %save('OtherRes_noCont.mat', 'OtherRes_noCont')
             
             Penetration_noCont = table(store_Gug_Penet) %
-            save('Penetration_noCont.mat', 'Penetration_noCont')
+            %save('Penetration_noCont.mat', 'Penetration_noCont')
         %
-        elseif Vmax(2) == 1.05
+        elseif Vmax(2) == 1.05 
             %BusName = testCase.bus_name;
             VoltageTable_Gug = table( store_Gug_V18, store_Gug_V9, store_Gug_V3) %
-            save('VoltageTable_Gug.mat', 'VoltageTable_Gug')
+            %save('VoltageTable_Gug.mat', 'VoltageTable_Gug')
             
             PcQcTAble_Gug = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg) %
-            save('PcQcTAble_Gug.mat', 'PcQcTAble_Gug')
+            %save('PcQcTAble_Gug.mat', 'PcQcTAble_Gug')
             
             OtherRes_Gug = table(store_Gug_I2R) %
-            save('OtherRes_Gug.mat', 'OtherRes_Gug')
+            %save('OtherRes_Gug.mat', 'OtherRes_Gug')
             
             Penetration_Gug = table(store_Gug_Penet) %
-            save('Penetration_Gug.mat', 'Penetration_Gug')
+            %save('Penetration_Gug.mat', 'Penetration_Gug')
         end
             
     elseif Guggi == 2
@@ -123,16 +124,16 @@ for i = 1 : length(solarCap)
         % Save output
         %BusName = testCase.bus_name;
         VoltageTable_VAR = table( store_VAR_V18, store_VAR_V9, store_VAR_V3) %
-        save('VoltageTable_VAR.mat', 'VoltageTable_VAR')
+        %save('VoltageTable_VAR.mat', 'VoltageTable_VAR')
         
         PcQcTAble_VAR = table(store_VAR_Pc, store_VAR_Qc, store_VAR_Pg, store_VAR_Qg) % 
-        save('PcQcTAble_VAR.mat', 'PcQcTAble_VAR')
+        %save('PcQcTAble_VAR.mat', 'PcQcTAble_VAR')
         
         OtherRes_VAR = table(store_VAR_I2R) % 
-        save('OtherRes_VAR.mat', 'OtherRes_VAR') 
+        %save('OtherRes_VAR.mat', 'OtherRes_VAR') 
         
         Penetration_VAR = table(store_VAR_Penet) % 
-        save('Penetration_VAR.mat', 'Penetration_VAR')
+        %save('Penetration_VAR.mat', 'Penetration_VAR')
     end
 end
 %% GRAPHS
@@ -153,7 +154,7 @@ if plotting == 1
         hold off
         xlabel('bus')
         ylabel('Voltage [p.u.]')
-        xlim([1 nBuses]); ylim([0.90 1.07])
+        xlim([1 nBuses]); ylim([0.90 1.15])
         xticks(0:1:nBuses);
         legend('V Gug','V MatPower','Poles','Large Solar','Location','SouthWest')
         title('Voltage Profile')
