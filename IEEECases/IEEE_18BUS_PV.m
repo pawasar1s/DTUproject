@@ -21,7 +21,7 @@ mpc.baseMVA = mbase; % [kVA]
 Pload = 2;
 Qload = 1.4;
 Vmin = 0.95;
-Vmax = 1.2;
+Vmax = 1.05;
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 % Vm - reference magnitude 
 % Va - reference angle. 

@@ -17,9 +17,11 @@ if multiPer == 0
              Pav(idxPV-1) = mpc.gen(2:end,9)*solar(per)/baseMVA; % Pmax
              Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(per)*inverterSize/baseMVA; % Pmin
              %Qmin = sqrt(Sinj.^2-Pav.^2);
+             Qmin = -tan(acos(PF))*(Pav);%+0.1*Pav;
         end
         %slope = Qmin./(V0 - deadband/2 - Vmin(2));
         %sloppy = slope.*ones(nB,1)
+        slope = 2*Qmin./(Vmax(2)-Vmin(2));
         % update load data
         Pd(idxPV-1) = loadHH(per,idxPV-1)'/baseMVA; % Pg
         Qd(idxPV-1) = loadHH(per,idxPV-1)'*0.6/baseMVA; % Qg, 0.6 assumed of Pd (we don't have Qd data)
@@ -47,7 +49,7 @@ if multiPer == 0
         abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
         %Qc(idxPV-1)./Qmax(idxPV-1) == -slope(idxPV-1).*(V(idxPV-1))-0.98  
         %Qc(idxPV-1) == -slope(idxPV-1).*(real(V(idxPV-1))-Vnom(2)+deadband/2) 
-        
+        slope = 2*Qmin./(Vmax(2)-Vmin(2));
         % Power balance eq.
         real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
         imag(V) == imag(ZBus)*(Pav - Pc - Pd) - real(ZBus)*(Qc - Qd); %Eq.5
@@ -65,6 +67,7 @@ if multiPer == 0
         Gug_QgTot = sum(Qc-Qd);
         Gug_PgTot = sum(Pd-Pav+Pc);
         % Reactive Power 
+        
         Gug_PcTot = sum(Pc);
         Gug_QcTot = sum(Qc);
         % Line losses
@@ -73,6 +76,7 @@ if multiPer == 0
     toc;
 elseif multiPer == 1
     tic;
+    T = 19
     mpc = testCase;
     baseMVA = mpc.baseMVA;
     nPV = size(mpc.gen,1)-1; % No of PV systems
@@ -90,8 +94,9 @@ elseif multiPer == 1
     %
     Gug_check_Sinj = complex(zeros(T,size(mpc.bus,1)-1)); % check Sinj
     Gug_actual_Sinj = complex(zeros(T,size(mpc.bus,1)-1)); 
-    Gug_check_PF = complex(zeros(T,size(mpc.bus,1)-1)); 
-    for t = 1 : T
+    Gug_check_PF = complex(zeros(T,size(mpc.bus,1)-1));
+    Gug_check_slope = complex(zeros(T,size(mpc.bus,1)-1)); 
+    for t = 14 : 26 
         % INPUT PARAMETERS ====================================================
         % update solar data
         if nPV ~= 0
@@ -104,6 +109,7 @@ elseif multiPer == 1
         Gug_actual_Sinj(t,:) = Sinj; 
         %slope = Qmin./(V0 + deadband/2 - Vmax(2));
         slope = 2*Qmin./(Vmax(2)-Vmin(2));
+        Gug_check_slope(t,:) = slope;
         %slope = -Qmin./(V0 - Vmax(2));
         % update load data
         Pd(idxPV-1) = loadHH(t,idxPV-1)'/baseMVA; % Pg
@@ -130,8 +136,8 @@ elseif multiPer == 1
         (Qc).^2 <= (Sinj).^2-(Pav).^2;%+0.1*Pav; %Eq.10 * including inverter oversizing
         abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
         %Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vnom(2)+deadband/2)
-        Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vmin(2))
-        %Qc(idxPV-1) == -slope(idxPV-1).*((V(idxPV-1))-Vnom(2))
+        %Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vmin(2))
+        Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vnom(2))
         
         % Power balance eq.
         real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
@@ -160,6 +166,7 @@ elseif multiPer == 1
     end
     toc;
  %% plot Qmax vs Qc 
+ 
     close all;
     figure(101)
     plot(Gug_QminInd(:,18),'*');hold on; plot(Gug_QcInd(:,18),'o')
@@ -177,7 +184,7 @@ elseif multiPer == 1
     legend({'Calculated Apparent Power', 'Actual Apparent Power'})  
     % 
     figure(104)
-    plot(1:48, Gug_PcTot)%;hold on; plot(Gug_QcInd(26,:),'o')
+    plot(1:26, Gug_PcTot)%;hold on; plot(Gug_QcInd(26,:),'o')
     ylabel('Active Power [kW]')
     legend({'Active Power Curtailment'})     
     % 
