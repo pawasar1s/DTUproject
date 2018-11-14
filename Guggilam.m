@@ -87,7 +87,6 @@ elseif multiPer == 1
         if nPV ~= 0
             Pav(idxPV-1) = mpc.gen(2:end,9)*solar(t)/baseMVA; % Pmax
             Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(t)*inverterSize/baseMVA; % Pmin
-            %Qmin = sqrt(Sinj.^2-Pav.^2)+0.1*Pav;
             Qmin = tan(acos(PF))*(Pav)+0.1*Pav;
         end
         Gug_QminInd(t,:) = -Qmin; % minus to show maax absorbtion level

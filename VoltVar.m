@@ -17,7 +17,7 @@ if multiPer == 0
              Pav(idxPV-1) = mpc.gen(2:end,9)*solar(per)/baseMVA; % Pmax
              Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(per)*inverterSize/baseMVA; % Pmin
              %Qmin = sqrt(Sinj.^2-Pav.^2);
-             Qmin = -tan(acos(PF))*(Pav);%+0.1*Pav;
+             %Qmin = -tan(acos(PF))*(Pav)+0.1*Pav;
         end
         %slope = Qmin./(V0 - deadband/2 - Vmin(2));
         %sloppy = slope.*ones(nB,1)
@@ -101,13 +101,15 @@ elseif multiPer == 1
         % update solar data
         if nPV ~= 0
             Pav(idxPV-1) = mpc.gen(2:end,9)*solar(t)/baseMVA; % Pmax
-            Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(t)*inverterSize/baseMVA; % Pmin
+            Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(t)/baseMVA;%*inverterSize/baseMVA; % Pmin
             %Qmin = sqrt(Sinj.^2-Pav.^2)+0.1*Pav;
-            Qmin = -tan(acos(PF))*(Pav);%+0.1*Pav;
+            Qmin = -tan(acos(PF))*(Pav)+0.1*Pav;
         end
         Gug_QminInd(t,:) = Qmin; % minus to show maax absorbtion level
         Gug_actual_Sinj(t,:) = Sinj; 
+        % with deadband
         %slope = Qmin./(V0 + deadband/2 - Vmax(2));
+        % without deadband
         slope = 2*Qmin./(Vmax(2)-Vmin(2));
         Gug_check_slope(t,:) = slope;
         %slope = -Qmin./(V0 - Vmax(2));
@@ -133,12 +135,10 @@ elseif multiPer == 1
         subject to
         % Solar PV constraints
         0 <= Pc <= Pav; %Eq.9
-        (Qc).^2 <= (Sinj).^2-(Pav).^2;%+0.1*Pav; %Eq.10 * including inverter oversizing
-        abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
+        %(Qc).^2 <= (Sinj).^2-(Pav-Pc).^2;%+0.1*Pav; %Eq.10 * including inverter oversizing
+        %abs(Qc) <= tan(acos(PF))*(Pav-Pc); %Eq.11
         %Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vnom(2)+deadband/2)
-        %Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vmin(2))
-        Qc(idxPV-1) == slope(idxPV-1).*((V(idxPV-1))-Vnom(2))
-        
+        Qc == slope.*(real(V)-Vnom(2))
         % Power balance eq.
         real(V) == Vnom + real(ZBus)*(Pav - Pc - Pd) + imag(ZBus)*(Qc - Qd); %Eq.5
         imag(V) == imag(ZBus)*(Pav - Pc - Pd) - real(ZBus)*(Qc - Qd); %Eq.5
@@ -187,10 +187,16 @@ elseif multiPer == 1
     plot(1:26, Gug_PcTot)%;hold on; plot(Gug_QcInd(26,:),'o')
     ylabel('Active Power [kW]')
     legend({'Active Power Curtailment'})     
-    % 
+    %
+    check_h = [18 21 24];
     figure(105)
-    plot(Gug_V(:,18), Gug_QcInd(:,18), '*')%;hold on; plot(Gug_QcInd(26,:),'o')
+    plot(Gug_V(check_h,18), Gug_QcInd(check_h,18), 'r*')%;hold on; plot(Gug_QcInd(26,:),'o')
+    xlim([0.95 1.05])
+    hold on 
+    plot([Vmin(2) Vmax(2)], [-Gug_QminInd(check_h,18) Gug_QminInd(check_h,18)])
+    xlim([0.95 1.05])
     ylabel('Active Power [kW]')
+    title('Volt/Var curve for different hours')
     legend({'Reactive power vs voltage'})    
     % 
     figure(106)
