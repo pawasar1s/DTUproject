@@ -26,7 +26,7 @@ Vmax = 1.05;
 % Vm - reference magnitude 
 % Va - reference angle. 
 mpc.bus = [
-1	3	0       0       0	0	1	1	0	0.240   1	1.0	    1.0; % grid
+1	3	0       0       0	0	1	1	0	0.240   1	1	    1; % grid
 2	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
 3	1	0       0       0	0	1	1	0	0.240	1	Vmax	Vmin;
 4	2	Pload	Qload	0	0	1	1	0	0.240	1	Vmax	Vmin;
@@ -89,26 +89,49 @@ x_Pline = x_poleLine/1000*polePoleL; % [p.u.]
 % i.e. mathematically equivalent to transformer with tap = 1)
 % opf.flow_lim option determines if branch limits are in S,P or I. 
 % === SHIFT - trasnformer phase shift angle (degrees), positive -> delay
+
+maxI = 32; % ACOPF works if set to 32000
 mpc.branch = [
-1	3	r_Pline	x_Pline     0	0	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
-2	3	r_Dline	x_Dline	    0	0	0	0	0	0	1	-360	360;
-3	4	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-3	6	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-5	6	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-6	7	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-6	9	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-8	9	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-9	10	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-9	12	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-11	12	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-12	13	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-12	15	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-14	15	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-15	16	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-15	18	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-17	18	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-18	19	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+1	3	r_Pline	x_Pline     0	maxI	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
+2	3	r_Dline	x_Dline	    0	maxI	0	0	0	0	1	-360	360;
+3	4	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+3	6	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
+5	6	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+6	7	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+6	9	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
+8	9	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+9	10	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+9	12	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
+11	12	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+12	13	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+12	15	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
+14	15	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+15	16	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+15	18	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
+17	18	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+18	19	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 ];
+
+% mpc.branch = [
+% 1	3	r_Pline	x_Pline     0	0	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
+% 2	3	r_Dline	x_Dline	    0	0	0	0	0	0	1	-360	360;
+% 4	3	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 3	6	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
+% 5	6	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 7	6	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 6	9	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
+% 8	9	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 10	9	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 9	12	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
+% 11	12	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 13	12	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 12	15	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
+% 14	15	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 16	15	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 15	18	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
+% 17	18	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% 19	18	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+% ];
 %%
 mpc.bus_name = {
 	'Grid';
@@ -148,8 +171,8 @@ mpc.gencost = [
     2	0      0	3	0    0	 0;
     2	0      0	3	0    0	 0;
     2	0      0	3	0    0	 0;
-    2	0      0	3	0    0	 0;
-    2	0      0	3	0    0	 0;
+    2	0      0	3	0    1	 0;
+    2	0      0	3	0    1	 0;
 ]; 
 %MODEL       = 1;    %% cost model, 1 = piecewise linear, 2 = polynomial
 %STARTUP     = 2;    %% startup cost in US dollars
@@ -160,6 +183,8 @@ mpc.gencost = [
 %% convert branch impedances from Ohms to p.u.
 mpc.Vbase = mpc.bus(1,10) * 1000; % from kV to 240 Volts
 mpc.Sbase = mpc.baseMVA * 1000; % from kVA to VA 
-mpc.branch(:, [3, 4]) = mpc.branch(:, [3, 4]) /(mpc.Vbase^2 / mpc.Sbase)
+mpc.branch(:, [3, 4]) = mpc.branch(:, [3, 4]) /(mpc.Vbase^2 / mpc.Sbase); % in p.u.
+mpc.Ibase = mpc.Sbase/mpc.Vbase; 
+mpc.branch(:, 6) =  mpc.branch(:, 6) / mpc.Ibase; % in p.u. 
 %% convert loads from kW to MW and kVAR to MVAR
 %mpc.bus(:, [3, 4]) = mpc.bus(:, [3, 4]);

@@ -5,49 +5,51 @@ addpath(genpath('IEEECases')); addpath(genpath('readMatPower')); addpath(genpath
 rmpath('cvx/lib/narginchk_') % remove this function to avoid a potential name conflict 
 %checkcode Guggilam -cyc %% -> Applies McCabe Complexity (should keep below
 %10) 
-%% Settings
+% Settings
 % No of time intervals
 multiPer = 1; % 1 = multiperiod model, 0 = discretised model
 per = 26; % for discretised model, which period to test? 26 = 1pm (30min intervals)
 % Matpower settings
-matpower = 0; % Matpower 1 - run Matpower for comparison 
-Guggi = 2; % Guggi = 1: Run Guggilam model, Guggi = 2: Run Volt/Var control model 
+matpower = 1; % Matpower 1 - run Matpower for comparison 
+Guggi = 1; % Guggi = 1: Run Guggilam model, Guggi = 2: Run Volt/Var control model 
 % Plotting 
-plotting = 0; % YES = 1, NO = 0
-%% Results at varios penetration levels
+plotting = 1; % YES = 1, NO = 0 
+% Results at varios penetration levels
 solarScen = 1; % if various solar peentration scenarios are on 
-solarCap = [1 2 2.5]; % capacity increase
-%% allocate memory
+solarCap = 1; % capacity increase
+%% Defines the number of periods and allocates memory
 if multiPer == 1
-    T = 48;  
+    T = 48; 
+    T0 = 1;
 else
     T = 1; 
 end
 if Guggi == 1 
-    store_Gug_V18 = complex(zeros(T, length(solarCap))); % Voltage vector
-    store_Gug_V9 = complex(zeros(T, length(solarCap))); % Voltage vector
-    store_Gug_V3 = complex(zeros(T, length(solarCap))); % Voltage vector
-    store_Gug_Pc = complex(zeros(T, length(solarCap))); % PV curtailment
-    store_Gug_Qc = complex(zeros(T, length(solarCap))); % Q from PV
-    store_Gug_Qg = complex(zeros(T, length(solarCap))); % Q from grid
-    store_Gug_Pg = complex(zeros(T, length(solarCap))); % Q from grid
-    store_Gug_I2R = complex(zeros(T, length(solarCap))); % line losses
+    store_Gug_V18 = complex(zeros(T-T0+1, length(solarCap))); % Voltage vector
+    store_Gug_V9 = complex(zeros(T-T0+1, length(solarCap))); % Voltage vector
+    store_Gug_V3 = complex(zeros(T-T0+1, length(solarCap))); % Voltage vector
+    store_Gug_Pc = complex(zeros(T-T0+1, length(solarCap))); % PV curtailment
+    store_Gug_Qc = complex(zeros(T-T0+1, length(solarCap))); % Q from PV
+    store_Gug_Qg = complex(zeros(T-T0+1, length(solarCap))); % Q from grid
+    store_Gug_Pg = complex(zeros(T-T0+1, length(solarCap))); % Q from grid
+    store_Gug_I2R = {}; % line losses
+    store_Gug_I = {}; % current 
     store_Gug_Penet = zeros(length(solarCap), 1); %
-elseif Guggi == 2
-    store_VAR_V18 = complex(zeros(T, length(solarCap))); % Voltage vector
-    store_VAR_V9 = complex(zeros(T, length(solarCap))); % Voltage vector
-    store_VAR_V3 = complex(zeros(T, length(solarCap))); % Voltage vector
-    store_VAR_Pc = complex(zeros(T, length(solarCap))); % PV curtailment
-    store_VAR_Qc = complex(zeros(T, length(solarCap))); % Q from PV
-    store_VAR_Qg = complex(zeros(T, length(solarCap))); % Q from grid
-    store_VAR_Pg = complex(zeros(T, length(solarCap))); % Q from grid
-    store_VAR_I2R = complex(zeros(T, length(solarCap))); % line losses
+elseif Guggi == 2 
+    store_VAR_V18 = complex(zeros(T-T0+1, length(solarCap))); % Voltage vector
+    store_VAR_V9 = complex(zeros(T-T0+1, length(solarCap))); % Voltage vector
+    store_VAR_V3 = complex(zeros(T-T0+1, length(solarCap))); % Voltage vector
+    store_VAR_Pc = complex(zeros(T-T0+1, length(solarCap))); % PV curtailment
+    store_VAR_Qc = complex(zeros(T-T0+1, length(solarCap))); % Q from PV
+    store_VAR_Qg = complex(zeros(T-T0+1, length(solarCap))); % Q from grid
+    store_VAR_Pg = complex(zeros(T-T0+1, length(solarCap))); % Q from grid
+    store_VAR_I2R = {}; % line losses
+    store_VAR_I = {}; % line current 
     store_VAR_Penet = zeros(length(solarCap), 1); %        
 end
 %%
 for i = 1 : length(solarCap)
     % Select test case
-    % testCase = IEEE_18BUS_PV; % select case
     % ==============
     % to change the scenario with no control, change Vmax to 1.2 in
     % IEEE_18BUS_PV.m  
@@ -55,19 +57,19 @@ for i = 1 : length(solarCap)
     % testCase = matpower_LV_semiurban; % works fine 
     % testCase = matpower_rural; % that's a big one, only MatPower
     testCase = IEEE_18BUS_PV; 
-%% network viz
-%network2 = networkViz(testCase);
-    %% Load Data
-    [solar, loadHH, loadTotal, timestamp, T, penetration, nBuses] = dataInput(testCase, solarCap(i));
+    % network viz
+    %network2 = networkViz(testCase);
+    % Load Data
+    [solar, loadHH, loadTotal, timestamp, penetration, nBuses] = dataInput(testCase, solarCap(1));
     %% MATPOWER power flow
     if matpower == 1
         ACOPFsolver = 1; % 1 = exact ACOPF, 2 = backward/forward sweep with I summation
         PF = 0.8;
-        [ACOPF_struct, ACOPF_V, ACOPF_I2R, ACOPF_f, ACOPF_Qg] = ACOPF(testCase, T, solar, loadHH, ACOPFsolver, multiPer, per, PF);
+        [ACOPF_struct, ACOPF_V, ACOPF_I2R, ACOPF_f, ACOPF_Qg, ACOPF_I, Vdrop] = ACOPF(testCase, T, T0, solar, loadHH, ACOPFsolver, multiPer, per, PF);
     end
     %% Guggilam
     if Guggi == 1
-        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, solar, loadHH, multiPer, per);
+        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per);
         % store results
         store_Gug_V18(:,i) = Gug_V(:,18); % Voltage vector Bus 18
         store_Gug_V9(:,i) = Gug_V(:,9); % Voltage vector Bus 18
@@ -76,7 +78,8 @@ for i = 1 : length(solarCap)
         store_Gug_Qc(:,i) = Gug_QcTot; % Q from PV (regulation)
         store_Gug_Qg(:,i) = Gug_QgTot; % Q from grid (total)
         store_Gug_Pg(:,i) = Gug_PgTot; % P from PV (curtailment)
-        store_Gug_I2R(:,i) = Gug_I2RTot; % line losses
+        store_Gug_I2R{i} = Gug_I2RTot; % line losses
+        store_Gug_I{i} = Gug_ITot; % line losses
         store_Gug_Penet(i) = penetration; % penetration level
         % Save output
         if Vmax(2) > 1.05 
@@ -87,12 +90,11 @@ for i = 1 : length(solarCap)
             PcQcTAble_noCont = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg) %
             %save('PcQcTAble_noCont.mat', 'PcQcTAble_noCont')
             
-            OtherRes_noCont = table(store_Gug_I2R) %
+            OtherRes_noCont = table(store_Gug_I2R, store_Gug_I) %
             %save('OtherRes_noCont.mat', 'OtherRes_noCont')
             
             Penetration_noCont = table(store_Gug_Penet) %
             %save('Penetration_noCont.mat', 'Penetration_noCont')
-        %
         elseif Vmax(2) == 1.05 
             %BusName = testCase.bus_name;
             VoltageTable_Gug = table( store_Gug_V18, store_Gug_V9, store_Gug_V3) %
@@ -101,16 +103,15 @@ for i = 1 : length(solarCap)
             PcQcTAble_Gug = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg) %
             %save('PcQcTAble_Gug.mat', 'PcQcTAble_Gug')
             
-            OtherRes_Gug = table(store_Gug_I2R) %
+            OtherRes_Gug = table(store_Gug_I2R, store_Gug_I) %
             %save('OtherRes_Gug.mat', 'OtherRes_Gug')
             
             Penetration_Gug = table(store_Gug_Penet) %
             %save('Penetration_Gug.mat', 'Penetration_Gug')
-        end
-            
+        end    
     elseif Guggi == 2
     % Volt\VAR control
-        [V, Pc, Qc, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = VoltVar(testCase, T, solar, loadHH, multiPer, per);    
+        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = VoltVar(testCase, T, T0, solar, loadHH, multiPer, per);    
         % store results
         store_VAR_V18(:,i) = Gug_V(:,18); % Voltage vector Bus 18
         store_VAR_V9(:,i) = Gug_V(:,9); % Voltage vector Bus 18
@@ -119,7 +120,8 @@ for i = 1 : length(solarCap)
         store_VAR_Qc(:,i) = Gug_QcTot; % Q from PV (regulation)
         store_VAR_Qg(:,i) = Gug_QgTot; % Q from grid (total)
         store_VAR_Pg(:,i) = Gug_PgTot; % P from PV (curtailment)
-        store_VAR_I2R(:,i) = Gug_I2RTot; % line losses
+        store_VAR_I2R{i} = Gug_I2RTot; % line losses
+        store_VAR_I{i} = Gug_ITot; % line losses
         store_VAR_Penet(i) = penetration; % penetration level
         % Save output
         %BusName = testCase.bus_name;
@@ -137,9 +139,13 @@ for i = 1 : length(solarCap)
     end
 end
 %% GRAPHS
+close all;
 if plotting == 1
     %nBuses = size(testCase.bus,1); % number of buses
     nLines = size(testCase.branch,1); % number of lines
+    if matpower == 0
+        error('Graphs wont be displayed with matpower == 0, change to 1')
+    end
     if multiPer == 0
         % ============  FEEDER VOLTAGE PROFILE
         f4 = figure(4);
@@ -241,7 +247,7 @@ if plotting == 1
         %plot(t,ones(size(solarHH,1),1)*0.95,'Marker','*','Color','r')
         xlabel('Time (Hour)')
         ylabel('Voltage [p.u.]')
-        ylim([0.94 1.08])
+        ylim([0.94 1.1])
         %xticks(0:2:size(loadHH,1));
         title('Voltage profile over day')
         legend({'ACOPF: Pole 3','ACOPF: Pole 9','ACOPF: Pole 18','Gug: Pole 3','Gug: Pole 9','Gug: Pole 18'},'Location','northwest')
@@ -269,7 +275,7 @@ if plotting == 1
         hold off
         xlabel('bus')
         ylabel('Voltage [p.u.]')
-        xlim([1 nBuses]); ylim([0.95 1.07])
+        xlim([1 nBuses]); ylim([0.95 1.1])
         xticks(0:1:nBuses);
         legend('ACOPF: V @ 1.00pm','ACOPF: V @ 8.00pm','Gug: V @ 1.00pm','Gug: V @ 8.00pm','Location','SouthWest')
         title('Voltage Profile')
@@ -284,9 +290,9 @@ if plotting == 1
         %hold on
         plot([1 4 7 10 13 16], ACOPF_I2R([26 40],[1 4 7 10 13 16]),'ro')
         hold on
-        plot([1 4 7 10 13 16], abs(Gug_I2R([26 40],[1 4 7 10 13 16])),'bo')
+        plot([1 4 7 10 13 16], abs(Gug_I2RTot([26 40],[1 4 7 10 13 16])),'bo')
         plot([2 3 5 6 8 9 11 12 14 15 17 18], ACOPF_I2R([26 40],[2 3 5 6 8 9 11 12 14 15 17 18]),'*')
-        plot([2 3 5 6 8 9 11 12 14 15 17 18], abs(Gug_I2R([26 40],[2 3 5 6 8 9 11 12 14 15 17 18])),'*')
+        plot([2 3 5 6 8 9 11 12 14 15 17 18], abs(Gug_I2RTot([26 40],[2 3 5 6 8 9 11 12 14 15 17 18])),'*')
         xlabel('Lines')
         ylabel('Line losses [kW]')
         legend('ACOPF: Pole-to-pole @ 1.00pm','ACOPF: Pole-to-pole @ 8.00pm',...
@@ -298,8 +304,17 @@ if plotting == 1
         set(gcf,'color','w');
         grid on
         grid minor
-        
-        % ============  REACTIVE POWER PURCHASE
+        %% ==============  CURRENT
+        figure(70)
+        plot(1:18, (ACOPF_I(:,:))'); 
+        hold on;  
+        plot([1 4 7 10 13 16],ACOPF_I(:,[1 4 7 10 13 16]),'k*') % poles
+        ylim([-60 30])
+        figure(71)
+        plot(1:18, (Gug_ITot(:,:))'); 
+        hold on;  
+        plot([1 4 7 10 13 16],Gug_ITot(:,[1 4 7 10 13 16]),'k*') % poles
+        %% ============  REACTIVE POWER PURCHASE
         f7 = figure(7);
         movegui(f7,'northeast');
         %plot(timE, ACOPF_PgQg)
@@ -357,4 +372,12 @@ if plotting == 1
 %         set(gcf,'color','w');
 %         grid on    
 % end
+%     define_constants;
+%     mpcbase = loadcase('IEEE_18BUS');
+%     mpcbase.bus(:, PD) = 0;
+%     mpcbase.bus(:, QD) = 0;
+%     mpcbase.gen(:, PG) = 0;
+%     mpctarget = loadcase('IEEE_18BUS');
+%     results = runcpf(mpcbase, mpctarget);
+%     results.cpf.max_lam
 end

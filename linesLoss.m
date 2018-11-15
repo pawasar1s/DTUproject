@@ -1,4 +1,4 @@
-function [lineLoss, Vdrop] = LineLoss(mpc, Vfull)
+function [lineLoss, Vdrop, I] = linesLoss(mpc, Vfull, nBuses)
 %% Inputs
 bus = mpc.bus;
 baseMVA = mpc.baseMVA;
@@ -27,12 +27,14 @@ nl = size(branch, 1);   %% number of branches
 % parameters
 Cf = sparse(1:nl, e2i(branch(:, F_BUS)), branch(:, BR_STATUS), nl, nb);
 Ct = sparse(1:nl, e2i(branch(:, T_BUS)), branch(:, BR_STATUS), nl, nb);
-tap = ones(nl, 1);                              %% default tap ratio = 1 for lines
-xfmr = find(branch(:, TAP));                    %% indices of transformers
-tap(xfmr) = branch(xfmr, TAP);                  %% include transformer tap ratios
-tap = tap .* exp(1j*pi/180 * branch(:, SHIFT)); %% add phase shifters
-Aa = spdiags(1 ./ tap, 0, nl, nl) * Cf - Ct; 
+%tap = ones(nl, 1);                              %% default tap ratio = 1 for lines
+%xfmr = find(branch(:, TAP));                    %% indices of transformers
+%tap(xfmr) = branch(xfmr, TAP);                  %% include transformer tap ratios
+%tap = tap .* exp(1j*pi/180 * branch(:, SHIFT)); %% add phase shifters
+%Aa = spdiags(1 ./ tap, 0, nl, nl) * Cf - Ct; 
+Aa = spdiags(ones(nBuses,1), 0, nl, nl)* Cf - Ct; 
 Ysc = 1 ./ (branch(:, BR_R) - 1j * branch(:, BR_X)); 
 Vdrop = Aa * Vfull;      %% vector of voltage drop across series impedance element
 lineLoss = baseMVA * Ysc .* Vdrop .* conj(Vdrop); 
+I = baseMVA * (Ysc .* conj(Vdrop));
 end

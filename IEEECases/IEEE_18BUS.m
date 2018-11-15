@@ -47,7 +47,7 @@ mpc.bus = [
 PVeff = 0.77;
 %	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	PmaxDC[kW]	PminDC[kW]	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
 mpc.gen = [
-	1	0	0   500	-500	1	1	mbase     1000        -1000       0	0	0	0	0	0	0	0	0	0	0;
+	1	30	20   500	-500	1	1	mbase     1000        -1000       0	0	0	0	0	0	0	0	0	0	0;
 %     2	0	0	5	-5      1	1	mbase     5.52*PVeff	5.52*PVeff	0	0	0	0	0	0	0	0	0	0	0;
 %     4	0	0	5	-5      1	1	mbase     5.70*PVeff	5.70*PVeff	0	0	0	0	0	0	0	0	0	0	0;
 %     5	0	0	5	-5      1	1	mbase     9.00*PVeff	9.00*PVeff	0	0	0	0	0	0	0	0	0	0	0;
@@ -73,26 +73,27 @@ r_Dline = r_dropLine/1000*dropLineL; % [p.u.]
 x_Dline = x_dropLine/1000*dropLineL; % [p.u.]
 r_Pline = r_poleLine/1000*polePoleL; % [p.u.]
 x_Pline = x_poleLine/1000*polePoleL; % [p.u.]
+maxI = 320; % ACOPF works if set to 32000
 %	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
 mpc.branch = [
-1	3	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-2	3	r_Dline	x_Dline	    0	0	0	0	0	0	1	-360	360;
-3	4	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-3	6	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-5	6	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-6	7	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-6	9	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-9	8	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-9	10	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-9	12	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-11	12	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-12	13	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-12	15	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-14	15	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-15	16	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-15	18	r_Pline	x_Pline 	0	0	0	0	0	0	1	-360	360;
-17	18	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
-18	19	r_Dline	x_Dline     0	0	0	0	0	0	1	-360	360;
+1	3	r_Pline	x_Pline 	0	1*maxI	0	0	0	0	1	-360	360;
+2	3	r_Dline	x_Dline	    0	1*maxI	0	0	0	0	1	-360	360;
+3	4	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+3	6	r_Pline	x_Pline 	0	1*maxI	0	0	0	0	1	-360	360;
+5	6	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+6	7	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+6	9	r_Pline	x_Pline 	0	1*maxI	0	0	0	0	1	-360	360;
+8	9	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+9	10	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+9	12	r_Pline	x_Pline 	0	1*maxI	0	0	0	0	1	-360	360;
+11	12	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+12	13	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+12	15	r_Pline	x_Pline 	0	1*maxI	0	0	0	0	1	-360	360;
+14	15	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+15	16	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+15	18	r_Pline	x_Pline 	0	1*maxI	0	0	0	0	1	-360	360;
+17	18	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
+18	19	r_Dline	x_Dline     0	1*maxI	0	0	0	0	1	-360	360;
 ];
 %%
 mpc.bus_name = {
@@ -138,6 +139,8 @@ mpc.gencost = [
 %% convert branch impedances from Ohms to p.u.
 mpc.Vbase = mpc.bus(1,10) * 1000; % from kV to 240 Volts
 mpc.Sbase = mpc.baseMVA * 1000; % from kVA to VA 
-mpc.branch(:, [3, 4]) = mpc.branch(:, [3, 4]) /(mpc.Vbase^2 / mpc.Sbase)
+mpc.branch(:, [3, 4]) = mpc.branch(:, [3, 4]) /(mpc.Vbase^2 / mpc.Sbase);
+mpc.Ibase = mpc.Sbase/mpc.Vbase; 
+mpc.branch(:, 6) =  mpc.branch(:, 6) / mpc.Ibase; % in p.u. 
 %% convert loads from kW to MW and kVAR to MVAR
 %mpc.bus(:, [3, 4]) = mpc.bus(:, [3, 4]);

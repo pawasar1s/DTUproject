@@ -1,14 +1,14 @@
-function [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, solar, loadHH, multiPer, per)
+function [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per)
 % inputs
-[~, ZBus, Ymn, nBuses, ~, nB] = readLinesMPC(testCase);
+[~, ZBus, Ysc, Aa, Ymn, Imax, nBuses, ~, nB] = readLinesMPC(testCase);
 [~, Vnom, Vmin, Vmax, ~, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
 %changePd = changePd; % between 2-10
-inverterSize = 1.1;
+inverterSize = 1.1; 
 if multiPer == 0
     tic;
     for k = 1% : load_scenarios
-        mpc = testCase;
-        baseMVA = mpc.baseMVA;
+        mpc = testCase; 
+        baseMVA = mpc.baseMVA; 
         nPV = size(mpc.gen,1)-1; % No of PV systems
         idxPV = find(mpc.bus(:,2) == 2); % idx for buses with PV systems
         % update solar data
@@ -49,8 +49,8 @@ if multiPer == 0
         % Voltage vector
         Gug_V = [V0; V];
         % Line Losses
-        [Gug_I2R, Vdrop] = linesLoss(mpc, Gug_V);
-        Gug_I2R = Gug_I2R'; Gug_V = Gug_V';
+        [Gug_I2R, Vdrop, Gug_I] = linesLoss(mpc, Gug_V, nBuses);
+        Gug_I2R = Gug_I2R'; Gug_V = Gug_V'; Gug_I = Gug_I'; 
         % Reactive Power 
         Gug_QgTot = sum(Qc-Qd);
         Gug_PgTot = sum(Pd-Pav+Pc);
@@ -59,7 +59,7 @@ if multiPer == 0
         Gug_QcTot = sum(Qc);
         % Line losses
         Gug_I2RTot = sum(Gug_I2R);
-        % Financial losses 
+        Gug_ITot = Gug_I;
     end
     toc;
 elseif multiPer == 1
@@ -68,20 +68,21 @@ elseif multiPer == 1
     baseMVA = mpc.baseMVA;
     nPV = size(mpc.gen,1)-1; % No of PV systems
     idxPV = find(mpc.bus(:,2) == 2); % idx for buses with PV systems
-    Gug_V = complex(zeros(T,size(mpc.bus,1))); % Bus Voltage Vector
-    Gug_QgTot = complex(zeros(T,1)); % Line Loss Vector
-    Gug_PcTot = complex(zeros(T,1)); % Line Loss Vector
-    Gug_QcTot = complex(zeros(T,1)); % Line Loss Vector
-    Gug_PgTot = complex(zeros(T,1)); % Line Loss Vector
-    Gug_I2RTot = complex(zeros(T,1)); % Line Loss Vector
+    Gug_V = complex(zeros(T-T0+1,size(mpc.bus,1))); % Bus Voltage Vector
+    Gug_QgTot = complex(zeros(T-T0+1,1)); % Line Loss Vector
+    Gug_PcTot = complex(zeros(T-T0+1,1)); % Line Loss Vector
+    Gug_QcTot = complex(zeros(T-T0+1,1)); % Line Loss Vector
+    Gug_PgTot = complex(zeros(T-T0+1,1)); % Line Loss Vector
+    Gug_I2RTot = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % Line Loss Vector 
+    Gug_ITot = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % Line current 
     %
-    Gug_QcInd = complex(zeros(T,size(mpc.bus,1)-1));  % Line Loss Vector
-    Gug_QminInd = complex(zeros(T,size(mpc.bus,1)-1));  % Line Loss Vector
+    Gug_QcInd = complex(zeros(T-T0+1,size(mpc.bus,1)-1));  % Line Loss Vector
+    Gug_QminInd = complex(zeros(T-T0+1,size(mpc.bus,1)-1));  % Line Loss Vector
     %
-    Gug_check_Sinj = complex(zeros(T,size(mpc.bus,1)-1)); % check Sinj
-    Gug_actual_Sinj = complex(zeros(T,size(mpc.bus,1)-1)); 
-    Gug_check_PF = complex(zeros(T,size(mpc.bus,1)-1)); 
-    for t = 1 : T
+    Gug_check_Sinj = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % check Sinj
+    Gug_actual_Sinj = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); 
+    Gug_check_PF = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); 
+    for t = T0 : T
         % START ====================================================
         % update solar data
         if nPV ~= 0
@@ -89,8 +90,8 @@ elseif multiPer == 1
             Sinj(idxPV-1) = mpc.gen(2:end,9)*solar(t)*inverterSize/baseMVA; % Pmin
             Qmin = tan(acos(PF))*(Pav)+0.1*Pav;
         end
-        Gug_QminInd(t,:) = -Qmin; % minus to show maax absorbtion level
-        Gug_actual_Sinj(t,:) = Sinj; 
+        Gug_QminInd(t-T0+1,:) = -Qmin; % minus to show maax absorbtion level
+        Gug_actual_Sinj(t-T0+1,:) = Sinj; 
         % update load data
         Pd(idxPV-1) = loadHH(t,idxPV-1)'/baseMVA; % Pg
         Qd(idxPV-1) = loadHH(t,idxPV-1)'*0.6/baseMVA; % Qg, 0.6 assumed of Pd (we don't have Qd data)
@@ -118,31 +119,37 @@ elseif multiPer == 1
         imag(V) == imag(ZBus)*(Pav - Pc - Pd) - real(ZBus)*(Qc - Qd); %Eq.5
         % Voltage magnitude limits
         Vmin <= Vnom + real(ZBus)*(Pav - Pc - Pd)+ imag(ZBus)*(Qc - Qd) <= Vmax; % Eq.7 & 8
+        % line limits 
+        %Vdroppy = (Aa(2:end,2:end) * (V));
+        %real(Ysc(2:end).*conj(Vdroppy)) <= 1000; 
+        %Vdroppy = Aa * [V0; V]; 
+        %abs(Ysc(16).*conj(Vdroppy(16))) <= Imax;
         cvx_end
         % SAVE RESULTS ===========================================
         % Voltage vector
         Vfull = [V0; V];
-        Gug_V(t,:) = Vfull;
+        Gug_V(t-T0+1,:) = Vfull;
         % Line Losses
-        [Gug_I2R, Vdrop] = linesLoss(mpc, Vfull);
+        [Gug_I2R, Gug_Vdrop, Gug_I] = linesLoss(mpc, Vfull, nBuses);
         % Reactive Power 
-        Gug_QgTot(t,:) = sum(Qc-Qd);
-        Gug_PgTot(t,:) = sum(Pd-Pav+Pc);
+        Gug_QgTot(t-T0+1,:) = sum(Qc-Qd);
+        Gug_PgTot(t-T0+1,:) = sum(Pd-Pav+Pc);
         % Reactive Power 
-        Gug_PcTot(t,:) = sum(Pc);
-        Gug_QcTot(t,:) = sum(Qc);
-        Gug_QcInd(t,:) = Qc;
+        Gug_PcTot(t-T0+1,:) = sum(Pc);
+        Gug_QcTot(t-T0+1,:) = sum(Qc);
+        Gug_QcInd(t-T0+1,:) = Qc;
         % Line losses
-        Gug_I2RTot(t,:) = sum(Gug_I2R);
+        Gug_I2RTot(t-T0+1,:) = Gug_I2R;
+        Gug_ITot(t-T0+1,:) = Gug_I;
         % validate results
-        Gug_check_Sinj(t,:) = sqrt(Qc.^2+(Pav-Pc).^2);
-        Gug_check_PF(t,:) = (Pav-Pc)./sqrt((Pav-Pc).^2+Qc.^2);
+        Gug_check_Sinj(t-T0+1,:) = sqrt(Qc.^2+(Pav-Pc).^2);
+        Gug_check_PF(t-T0+1,:) = (Pav-Pc)./sqrt((Pav-Pc).^2+Qc.^2);
     end
     toc;
     %% plot Qmax vs Qc 
     close all;
     figure(101)
-    plot(Gug_QminInd(:,18),'*');hold on; plot(Gug_QcInd(:,18),'o')
+    plot(Gug_QminInd(:,16),'*');hold on; plot(Gug_QcInd(:,16),'o')
     ylabel('Reactive Power [kVAR]')
     legend({'Qmin','Observed Qc'})
     %
@@ -152,23 +159,28 @@ elseif multiPer == 1
     legend({'Voltage'})   
     %
     figure(103)
-    plot(Gug_check_Sinj(:,18),'*');hold on; plot(Gug_actual_Sinj(:,18),'o')
+    plot(Gug_check_Sinj(:,16),'*');hold on; plot(Gug_actual_Sinj(:,16),'o')
     ylabel('Apparent power S_inj [kVA]')
     legend({'Calculated Apparent Power', 'Actual Apparent Power'})  
     %
     figure(104)
-    plot(1:48, Gug_PcTot)%;hold on; plot(Gug_QcInd(26,:),'o')
+    plot(T0:T, Gug_PcTot)%;hold on; plot(Gug_QcInd(26,:),'o')
     ylabel('Active Power [kW]')
     legend({'Active Power Curtailment'})     
     %
     figure(105)
-    plot(Gug_V(:,18), Gug_QcInd(:,18), '*')%;hold on; plot(Gug_QcInd(26,:),'o')
+    plot(Gug_V(:,16), Gug_QcInd(:,16), '*')%;hold on; plot(Gug_QcInd(26,:),'o')
     ylabel('Active Power [kW]')
     legend({'Reactive power vs voltage'})    
     %
     figure(106)
-    plot(Gug_check_PF(:,18), '*')%;hold on; plot(1:48, 0.8*ones(1,48),'o')
+    plot(Gug_check_PF(:,16), '*')%;hold on; plot(1:48, 0.8*ones(1,48),'o')
     ylabel('Power Factor')
     legend({'Power Factor'})  
+    %
+    figure(107)
+    plot(1:nB, Gug_ITot(12,:), '*')
+    ylabel('Current [A]')
+    legend({'Line current'})   
 end
 end
