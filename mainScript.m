@@ -1,10 +1,11 @@
-clear; clc; close all; 
+clear all; clc; close all; 
 addpath(genpath('matpower7.0b1')); addpath(genpath('cvx')); addpath(genpath('SC_Cases')); 
-addpath(genpath('IEEECases')); addpath(genpath('readMatPower')); addpath(genpath('Results')); 
+addpath(genpath('IEEECases')); addpath(genpath('/Users/tesla/Documents/Research/Polito/DTUproject/readMatPower')); addpath(genpath('Results')); 
 %addpath(genpath('C:\Users\plus0002\OneDrive\PhD\DTUproject\cvx'))  
 rmpath('cvx/lib/narginchk_') % remove this function to avoid a potential name conflict 
 %checkcode Guggilam -cyc %% -> Applies McCabe Complexity (should keep below
 %10) 
+%%
 % Settings
 % No of time intervals
 multiPer = 1; % 1 = multiperiod model, 0 = discretised model

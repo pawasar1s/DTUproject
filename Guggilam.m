@@ -1,6 +1,7 @@
 function [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per)
 % inputs
-[~, ZBus, Ysc, Aa, Ymn, Imax, nBuses, ~, nB] = readLinesMPC(testCase);
+%[~, ZBus, Ysc, Aa, Ymn, Imax, nBuses, ~, nB] = readLinesMPC(testCase);
+[YBus, ZBus, Ysc, Aa, Ymn, Imax, nBuses, nLines, nB] = readLinesMPC(testCase);
 [~, Vnom, Vmin, Vmax, ~, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
 %changePd = changePd; % between 2-10
 inverterSize = 1.1; 

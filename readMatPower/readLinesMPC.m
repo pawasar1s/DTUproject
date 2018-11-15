@@ -1,4 +1,4 @@
-function [YBus, ZBus, Ysc, Aa, Ymn, Imax, nBuses, nLines, nB] = readLinesMPC(testCase);
+function [YBus, ZBus, Ysc, Aa, Ymn, Imax, nBuses, nLines, nB] = readLinesMPC(testCase)
 %% mpc data
 % Lines
 nBuses = size(testCase.bus,1); % number of buses 
