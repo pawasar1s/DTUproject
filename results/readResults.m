@@ -1,13 +1,25 @@
-clear all;
+%clear all;
 load('PcQcTable_noCont.mat');
-load('PcQcTable_GuG.mat');
+load('PcQcTable_OIDnew.mat');
 load('PcQcTable_VAR.mat');
 load('OtherRes_noCont.mat');
-load('OtherRes_GuG.mat');
+load('OtherRes_OIDnew.mat');
 load('OtherRes_VAR.mat');
 load('VoltageTable_noCont.mat');
-load('VoltageTable_GuG.mat');
+load('VoltageTable_OIDnew.mat');
 load('VoltageTable_VAR.mat');
+save('Penetration_OIDnew.mat');
+%% Penetration graph
+figure(1);semilogy([Penetration_OIDnew.store_Gug_Penet],solarGen)
+hold on
+semilogy(Penetration_OIDnew.store_Gug_Penet,sum(PcQcTAble_OIDnew.store_Gug_Pc,1))
+legend({'PV_{av}','PV_{c}'}, 'Location', 'northwest')
+ylim([1 10^3])
+xlabel('Penetration')
+ylabel('Active Power [kW]')
+title('PV hosting capacity chart')
+grid on
+set(gcf,'color','w'); 
 %%
 solarCap = [1 2 2.5]; % capacity increase
 testCase = IEEE_18BUS_PV; 
@@ -107,6 +119,7 @@ ylabel('Active Power Losses [%]')
 title('Line Losses (% of Load)')
 grid on
 set(gcf,'color','w');  
+% Total load versus total solar PV output
 figure(37);plot([loadTotal sum(testCase.gen(2:end,9)).*solar])
 legend({'load', 'solar'})
 xlabel('Time')

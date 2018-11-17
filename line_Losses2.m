@@ -14,8 +14,8 @@ function [loss, Vdrop, ACOPF_I, fchg, tchg, dloss_dV, dchg_dVm] = line_Losses2(b
 %   following formulae:
 %
 %       loss = abs( Vf / tau - Vt ) ^ 2 / (Rs - j Xs)
-%       fchg = abs( Vf / tau ) ^ 2 * Bc / 2
-%       tchg = abs( Vt ) ^ 2 * Bc / 2
+%       fchg = abs( Vf / tau ) ^ 2 * Bc / 2 
+%       tchg = abs( Vt ) ^ 2 * Bc / 2 
 %
 %   Optionally, computes the partial derivatives of the line losses with
 %   respect to voltage angles and magnitudes.
@@ -96,7 +96,7 @@ A = spdiags(1 ./ tap, 0, nl, nl) * Cf - Ct;
 Ysc = 1 ./ (branch(:, BR_R) - 1j * branch(:, BR_X));
 Vdrop = A * V;      %% vector of voltage drop across series impedance element
 loss = baseMVA * Ysc .* Vdrop .* conj(Vdrop);
-ACOPF_I = baseMVA * (Ysc .* conj(Vdrop));
+ACOPF_I = Ysc .* conj(Vdrop);
 % loss = baseMVA * abs(V(e2i(branch(:, F_BUS))) ./ tap - V(e2i(branch(:, T_BUS)))) .^ 2 ./ ...
 %             (branch(:, BR_R) - 1j * branch(:, BR_X));
 % loss(out) = 0;

@@ -90,25 +90,27 @@ x_Pline = x_poleLine/1000*polePoleL; % [p.u.]
 % opf.flow_lim option determines if branch limits are in S,P or I. 
 % === SHIFT - trasnformer phase shift angle (degrees), positive -> delay
 
-maxI = 32; % ACOPF works if set to 32000
+maxI = 500; % 100A fpr a 3-phase system, 32A for one-phase
 mpc.branch = [
 1	3	r_Pline	x_Pline     0	maxI	0	0	0	0	1	-360	360; % line from slack bus has no impedance 
-2	3	r_Dline	x_Dline	    0	maxI	0	0	0	0	1	-360	360;
+3	2	r_Dline	x_Dline	    0	maxI	0	0	0	0	1	-360	360;
 3	4	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 3	6	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
-5	6	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+6	5	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 6	7	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 6	9	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
-8	9	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+9	8	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 9	10	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+% Line 10
 9	12	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
-11	12	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+% Line 10
+12	11	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 12	13	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 12	15	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
-14	15	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+15	14	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 15	16	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 15	18	r_Pline	x_Pline 	0	maxI	0	0	0	0	1	-360	360;
-17	18	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
+18	17	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 18	19	r_Dline	x_Dline     0	maxI	0	0	0	0	1	-360	360;
 ];
 
@@ -171,8 +173,8 @@ mpc.gencost = [
     2	0      0	3	0    0	 0;
     2	0      0	3	0    0	 0;
     2	0      0	3	0    0	 0;
-    2	0      0	3	0    1	 0;
-    2	0      0	3	0    1	 0;
+    2	0      0	3	0    0	 0;
+    2	0      0	3	0    0	 0;
 ]; 
 %MODEL       = 1;    %% cost model, 1 = piecewise linear, 2 = polynomial
 %STARTUP     = 2;    %% startup cost in US dollars

@@ -1,4 +1,4 @@
-function [solar, loadHH, loadTotal, timestamp, penetration, nBuses] = dataInput(testCase, solarCap)
+function [solar, solarInstalled, solarGen, loadHH, loadTotal, timestamp, penetration, nBuses] = dataInput(testCase, solarCap)
 %% inputs
 load('loadProfile.mat', 'all30min'); load('solarProfile.mat', 'solarHH'); % load input files
 nBuses = size(testCase.bus,1)-1;
@@ -16,7 +16,12 @@ else
 end
 % Peak load and peak solar 
 loadP = max(sum(loadHH,1));
-solarP = sum(testCase.gen(2:end,9));
-penetration = solarP*solarCap/loadP;
+solarInstalled = sum(testCase.gen(2:end,9))*solarCap;
+temp = zeros(48,1);
+for i = 1 : 48
+    temp(i,1) = solarInstalled*solar(i);
+end 
+solarGen = sum(temp);
+penetration = solarCap/loadP;
 nBuses = size(testCase.bus,1);
 end
