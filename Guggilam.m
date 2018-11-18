@@ -1,4 +1,4 @@
-function [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_Vdrop, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per, plotting)
+function [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_Vdrop, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot, Gug_actual_Sinj, Gug_actual_Pav] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per, plotting)
 [~, ZBus, Ysc, Aa, Ymn, Imax, nBuses, ~, nB] = readLinesMPC(testCase);
 [~, Vnom, Vmin, Vmax, V0, Pd, Qd, Pav, Sinj, A, B, C, D, PF] = readGensMPC(testCase, nBuses);
 inverterSize = 1.1; % oversized by 10%
@@ -77,6 +77,7 @@ elseif multiPer == 1 % multiperiod model
     Gug_QminInd = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % maximum PV reactive power (due to PF)
     Gug_Pinj = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % PV output injected in the grid
     Gug_check_Sinj = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % FOR GRAPHS: real inverter capacity considering Pc   
+    Gug_actual_Pav = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % Pav   
     Gug_actual_Sinj = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % FOR GRAPHS: inverter capacity based on Pav    
     Gug_check_PF = complex(zeros(T-T0+1,size(mpc.bus,1)-1)); % FOR GRAPHS: PF
     for t = T0 : T
@@ -88,6 +89,7 @@ elseif multiPer == 1 % multiperiod model
         end
         Gug_QminInd(t-T0+1,:) = -Qmin; % FOR GRAPHS: with minus to show max level of absorbed reactive power  
         Gug_actual_Sinj(t-T0+1,:) = Sinj; % FOR GRAPHS: inverter capacity based on Pav  
+        Gug_actual_Pav(t-T0+1,:) = Pav; % FOR GRAPHS: inverter capacity based on Pav  
         % update load data
         Pd(idxPV-1) = loadHH(t,idxPV-1)'/baseMVA; % Pg
         Qd(idxPV-1) = loadHH(t,idxPV-1)'*0.6/baseMVA; % Qg: 0.6*Pg - assumed

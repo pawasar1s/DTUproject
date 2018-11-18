@@ -8,10 +8,10 @@ rmpath('cvx/lib/narginchk_') % remove this function to avoid a potential name co
 multiPer = 1; % 1: multiperiod model, 0: discretised model 
 per = 26; % for discretised model, which period to test? 26: 1pm (30min intervals) 
 matpower = 0; % 1: run Matpower for comparison; else 0.
-OID_model = 1; % 1: run Guggilam OID model, 2: run Volt/Var droop control model  
+OID_model = 2; % 1: run Guggilam OID model, 2: run Volt/Var droop control model  
 plotting = 0; % 1: YES, 0: NO
-% solarCap = [0 0.4 0.7 1 1.2 1.5 1.8 2.1 2.4 2.7 3]; % solar PV capacity multiplier
-solarCap = 2.5; % solar PV capacity multiplier
+solarCap = [0 0.4 0.7 1 1.2 1.5 1.8 2.1 2.4 2.7 3 3.3 3.6]; % solar PV capacity multiplier
+%solarCap = 2.5; % solar PV capacity multiplier
 %% Defines the number of periods and allocates memory
 if multiPer == 1
     T = 48; 
@@ -27,12 +27,14 @@ if OID_model == 1
     store_Gug_Qc = complex(zeros(T-T0+1, length(solarCap))); % Qc - from PV
     store_Gug_Qg = complex(zeros(T-T0+1, length(solarCap))); % Qg - from grid
     store_Gug_Pg = complex(zeros(T-T0+1, length(solarCap))); % Pg - from grid
-    store_Gug_I2R = cell(T-T0+1, 1); % line losses
-    store_Gug_I = cell(T-T0+1, 1); % line current 
-    store_Gug_Vdrop = cell(T-T0+1, 1); % voltage drop
+    store_Gug_I2R = cell(1, length(solarCap)); % line losses
+    store_Gug_I = cell(1, length(solarCap)); % line current 
+    store_Gug_Vdrop = cell(1, length(solarCap)); % voltage drop
     store_Gug_Penet = zeros(length(solarCap), 1); % penetration levels
     store_Gug_PVCap = zeros(length(solarCap), 1); % total PV capacity
     store_Gug_PVGen = zeros(length(solarCap), 1); % total PV generated
+    store_Gug_Sinj = cell(1, length(solarCap)); % max inverter capacity 
+    store_Gug_Pav = cell(1, length(solarCap)); % Pav 
 elseif OID_model == 2 
     store_VAR_V18 = complex(zeros(T-T0+1, length(solarCap))); % voltage vector, house 18
     store_VAR_V9 = complex(zeros(T-T0+1, length(solarCap))); % voltage vector, house 9
@@ -41,12 +43,14 @@ elseif OID_model == 2
     store_VAR_Qc = complex(zeros(T-T0+1, length(solarCap))); % Qc - from PV
     store_VAR_Qg = complex(zeros(T-T0+1, length(solarCap))); % Qg - from grid
     store_VAR_Pg = complex(zeros(T-T0+1, length(solarCap))); % Pg - from grid
-    store_VAR_I2R = cell(T-T0+1, 1); % line losses
-    store_VAR_I = cell(T-T0+1, 1); % line current 
-    store_VAR_Vdrop = cell(T-T0+1, 1); % voltage drop
+    store_VAR_I2R = cell(1, length(solarCap)); % line losses
+    store_VAR_I = cell(1, length(solarCap)); % line current 
+    store_VAR_Vdrop = cell(1, length(solarCap)); % voltage drop
     store_VAR_Penet = zeros(length(solarCap), 1); % penetration levels 
     store_VAR_PVCap = zeros(length(solarCap), 1); % total PV capacity
     store_VAR_PVGen = zeros(length(solarCap), 1); % total PV generated
+    store_VAR_Sinj = cell(1, length(solarCap)); % max inverter capacity 
+    store_VAR_Pav = cell(1, length(solarCap)); % Pav 
 end
 %%
 for i = 1 : length(solarCap)
@@ -70,7 +74,7 @@ for i = 1 : length(solarCap)
     end
     %% Guggilam OID model
     if OID_model == 1
-        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_Vdrop, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per, plotting);
+        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_Vdrop, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot, Gug_actual_Sinj, Gug_actual_Pav] = Guggilam(testCase, T, T0, solar, loadHH, multiPer, per, plotting);
         % store results
         store_Gug_V18(:,i) = Gug_V(:,18); %voltage vector Bus 18
         store_Gug_V9(:,i) = Gug_V(:,9); % voltage vector Bus 9
@@ -85,6 +89,8 @@ for i = 1 : length(solarCap)
         store_Gug_Penet(i) = penetration; % penetration level
         store_Gug_PVCap(i) = solarTotal; % total solar PV capacity
         store_Gug_PVGen(i) = solarGen; % total PV generated
+        store_Gug_Sinj{i} = Gug_actual_Sinj; % max inverter capacity 
+        store_Gug_Pav{i} = Gug_actual_Pav; % Pav 
         % save output to .mat file
         % comment 'save' line as default to not overwrite files
         if Vmax(2) > 1.05 
@@ -92,7 +98,7 @@ for i = 1 : length(solarCap)
             %save('VoltageTable_noCont.mat', 'VoltageTable_noCont')
             PcQcTAble_noCont = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg);
             %save('PcQcTAble_noCont.mat', 'PcQcTAble_noCont')
-            OtherRes_noCont = table(store_Gug_I2R, store_Gug_I); 
+            OtherRes_noCont = table(store_Gug_I2R, store_Gug_I, store_Gug_Sinj, store_Gug_Pav); 
             %save('OtherRes_noCont.mat', 'OtherRes_noCont')
             Penetration_noCont = table(store_Gug_Penet, store_Gug_PVCap, store_Gug_PVGen);
             %save('Penetration_noCont.mat', 'Penetration_noCont')
@@ -101,14 +107,14 @@ for i = 1 : length(solarCap)
             %save('VoltageTable_OIDnew.mat', 'VoltageTable_OIDnew')
             PcQcTAble_OIDnew = table(store_Gug_Pc, store_Gug_Qc, store_Gug_Pg, store_Gug_Qg);
             %save('PcQcTAble_OIDnew.mat', 'PcQcTAble_OIDnew')
-            OtherRes_OIDnew = table(store_Gug_I2R, store_Gug_I, store_Gug_Vdrop);
+            OtherRes_OIDnew = table(store_Gug_I2R, store_Gug_I, store_Gug_Vdrop, store_Gug_Sinj, store_Gug_Pav);
             %save('OtherRes_OIDnew.mat', 'OtherRes_OIDnew')
             Penetration_OIDnew = table(store_Gug_Penet, store_Gug_PVCap, store_Gug_PVGen);
             %save('Penetration_OIDnew.mat', 'Penetration_OIDnew')
         end 
     % Volt/VAR droop model
     elseif OID_model == 2
-        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_Vdrop, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot] = VoltVar(testCase, T, T0, solar, loadHH, multiPer, per, plotting);    
+        [V, Pc, Qc, Vmax, Gug_V, Gug_I2R, Gug_ITot, Gug_Vdrop, Gug_PgTot, Gug_QgTot, Gug_I2RTot, Gug_PcTot, Gug_QcTot, Gug_actual_Sinj, Gug_actual_Pav] = VoltVar(testCase, T, T0, solar, loadHH, multiPer, per, plotting);    
         % store results
         store_VAR_V18(:,i) = Gug_V(:,18); % voltage vector Bus 18
         store_VAR_V9(:,i) = Gug_V(:,9); % voltage vector Bus 9
@@ -123,16 +129,18 @@ for i = 1 : length(solarCap)
         store_VAR_Penet(i) = penetration; % penetration level
         store_VAR_PVCap(i) = solarTotal; % total solar PV capacity
         store_VAR_PVGen(i) = solarGen; % total PV generated
+        store_VAR_Sinj{i} = Gug_actual_Sinj; % max inverter capacity 
+        store_VAR_Pav{i} = Gug_actual_Pav; % Pav 
         % save output to .mat file
         % comment 'save' line as default to not overwrite files
         VoltageTable_VARnew = table( store_VAR_V18, store_VAR_V9, store_VAR_V3);
-        %save('VoltageTable_VARnew.mat', 'VoltageTable_VARnew')
+        save('VoltageTable_VARnew.mat', 'VoltageTable_VARnew')
         PcQcTAble_VARnew = table(store_VAR_Pc, store_VAR_Qc, store_VAR_Pg, store_VAR_Qg);
-        %save('PcQcTAble_VARnew.mat', 'PcQcTAble_VARnew')
-        OtherRes_VARnew = table(store_VAR_I2R, store_VAR_I, store_VAR_Vdrop); 
-        %save('OtherRes_VARnew.mat', 'OtherRes_VARnew') 
+        save('PcQcTAble_VARnew.mat', 'PcQcTAble_VARnew')
+        OtherRes_VARnew = table(store_VAR_I2R, store_VAR_I, store_VAR_Vdrop, store_VAR_Sinj, store_VAR_Pav); 
+        save('OtherRes_VARnew.mat', 'OtherRes_VARnew') 
         Penetration_VARnew = table(store_VAR_Penet, store_VAR_PVCap, store_VAR_PVGen); 
-        %save('Penetration_VARnew.mat', 'Penetration_VARnew')
+        save('Penetration_VARnew.mat', 'Penetration_VARnew')
     end
 end
 %% GRAPHS

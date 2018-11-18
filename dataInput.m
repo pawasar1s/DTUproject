@@ -22,6 +22,6 @@ for i = 1 : 48
     temp(i,1) = solarInstalled*solar(i);
 end 
 solarGen = sum(temp);
-penetration = solarCap/loadP;
+penetration = solarInstalled/loadP;
 nBuses = size(testCase.bus,1);
 end
